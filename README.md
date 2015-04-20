@@ -22,7 +22,7 @@
 **CAI** (Controlling Access to the Internet) - The program allows one-click application to block access to the Internet, using the Windows Firewall.
 
 ✔ **Blocking access in a single click**<br>
-Simply right-click on the program (.exe) or library (.dll), to block her access to the Internet.
+Simply right-click on the program (.exe) or library (.dll), to block her access to the Internet.<br>
 Required to correct the path to the program in the "AddContextMenu.reg" and execute it.
 
 ✔ **Removing locks for remote programming**<br>
