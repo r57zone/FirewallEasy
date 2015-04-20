@@ -23,7 +23,6 @@
 
 ✔ **Blocking access in a single click**<br>
 Simply right-click on the program (.exe) or library (.dll), to block her access to the Internet.
-![untitled-1](https://cloud.githubusercontent.com/assets/9499881/7240423/df90ee5c-e7c1-11e4-959c-e07bb1b97d4d.png)<br>
 Required to correct the path to the program in the "AddContextMenu.reg" and execute it.
 
 ✔ **Removing locks for remote programming**<br>
