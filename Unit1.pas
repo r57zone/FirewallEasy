@@ -192,19 +192,9 @@ begin
 Application.MessageBox('Управление доступом в интернет 0.2'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 05.05.2015','О программе...',0);
 end;
 
-procedure SendMessageToHandle(TRGWND:hwnd;MsgToHandle:string);
-var
-CDS: TCopyDataStruct;
-begin
-CDS.dwData:=0;
-CDS.cbData:=(length(MsgToHandle)+1)*sizeof(char);
-CDS.lpData:=PChar(MsgToHandle);
-SendMessage(TRGWND,WM_COPYDATA,Integer(Application.Handle),Integer(@CDS));
-end;
-
 procedure TForm1.FormCreate(Sender: TObject);
 var
-Rules:TStringList; i:integer; WND:HWND;
+Rules:TStringList; i:integer;
 begin
 Application.Title:=Caption;
 ChangedRules:=false;
