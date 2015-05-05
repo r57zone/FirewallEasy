@@ -4,7 +4,7 @@ object Form1: TForm1
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1076#1086#1089#1090#1091#1087#1086#1084' '#1074' '#1080#1085#1090#1077#1088#1085#1077#1090
-  ClientHeight = 307
+  ClientHeight = 332
   ClientWidth = 410
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,14 +20,14 @@ object Form1: TForm1
   TextHeight = 13
   object Label1: TLabel
     Left = 8
-    Top = 8
+    Top = 9
     Width = 69
     Height = 13
     Caption = #1052#1086#1080' '#1087#1088#1072#1074#1080#1083#1072':'
   end
   object Button1: TButton
     Left = 8
-    Top = 256
+    Top = 283
     Width = 75
     Height = 25
     Caption = #1044#1086#1073#1072#1074#1080#1090#1100
@@ -36,7 +36,7 @@ object Form1: TForm1
   end
   object Button2: TButton
     Left = 88
-    Top = 256
+    Top = 283
     Width = 75
     Height = 25
     Caption = #1059#1076#1072#1083#1080#1090#1100
@@ -45,7 +45,7 @@ object Form1: TForm1
   end
   object Button3: TButton
     Left = 168
-    Top = 256
+    Top = 283
     Width = 75
     Height = 25
     Caption = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '
@@ -66,7 +66,7 @@ object Form1: TForm1
   end
   object Button4: TButton
     Left = 248
-    Top = 256
+    Top = 283
     Width = 75
     Height = 25
     Caption = #1041#1088#1072#1085#1076#1084#1072#1091#1101#1088
@@ -75,7 +75,7 @@ object Form1: TForm1
   end
   object Button5: TButton
     Left = 328
-    Top = 256
+    Top = 283
     Width = 75
     Height = 25
     Caption = #1042#1099#1093#1086#1076
@@ -84,12 +84,29 @@ object Form1: TForm1
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 288
+    Top = 313
     Width = 410
     Height = 19
     Panels = <>
     SimplePanel = True
     OnClick = StatusBar1Click
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 256
+    Width = 393
+    Height = 21
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clSilver
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 7
+    Text = #1055#1086#1080#1089#1082'...'
+    OnChange = Edit1Change
+    OnKeyDown = Edit1KeyDown
+    OnMouseDown = Edit1MouseDown
   end
   object XPManifest1: TXPManifest
     Left = 8
