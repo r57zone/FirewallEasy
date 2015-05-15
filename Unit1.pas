@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComObj, ShellAPI, XPMan, ComCtrls;
+  Dialogs, StdCtrls, ComObj, ShellAPI, XPMan, ComCtrls, ExtCtrls;
 
 type
   TForm1 = class(TForm)
@@ -19,6 +19,8 @@ type
     StatusBar1: TStatusBar;
     OpenDialog1: TOpenDialog;
     Edit1: TEdit;
+    Label2: TLabel;
+    Label3: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
@@ -34,6 +36,9 @@ type
     procedure Edit1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure Edit1Change(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure ListBox1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   protected
     procedure WMDropFiles (var Msg: TMessage); message wm_DropFiles;
   private
@@ -189,7 +194,7 @@ end;
 
 procedure TForm1.StatusBar1Click(Sender: TObject);
 begin
-Application.MessageBox('Управление доступом в интернет 0.2'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 05.05.2015','О программе...',0);
+Application.MessageBox('Управление доступом в интернет 0.2.1'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 15.05.2015','О программе...',0);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -239,7 +244,10 @@ end;
 procedure TForm1.ListBox1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-if ListBox1.ItemIndex<>-1 then ListBox1.Hint:=RulePaths.Strings[ListBox1.ItemIndex];
+if ListBox1.ItemIndex<>-1 then begin
+StatusBar1.SimpleText:=' '+RulePaths.Strings[ListBox1.ItemIndex];
+if Button=mbRight then ShellExecute(0, 'open', 'explorer', PChar('/select, '+RulePaths.Strings[ListBox1.ItemIndex]),nil,SW_SHOW);
+end;
 end;
 
 procedure TForm1.Button3Click(Sender: TObject);
@@ -290,6 +298,20 @@ i:integer;
 begin
 for i:=0 to RuleNames.Count-1 do
 if pos(AnsiLowerCase(Edit1.Text),AnsiLowerCase(RuleNames.Strings[i]))>0 then ListBox1.Selected[i]:=true;
+if ListBox1.ItemIndex<>-1 then StatusBar1.SimpleText:=' '+RulePaths.Strings[ListBox1.ItemIndex];
+end;
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+ListBox1.SetFocus;
+StatusBar1.ControlStyle:=ControlStyle-[csParentBackground];
+StatusBar1.Color:=clWhite;
+end;
+
+procedure TForm1.ListBox1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+if ListBox1.ItemIndex<>-1 then StatusBar1.SimpleText:=' '+RulePaths.Strings[ListBox1.ItemIndex];
 end;
 
 end.
