@@ -1,11 +1,11 @@
 <h2>RU:</h2>
 **CAI** (Управление доступом в интернет) - Программа позволяет в один клик заблокировать доступ приложения в интернет, с помощью Брандмауэр Windows.
 
-![screen0 2](https://cloud.githubusercontent.com/assets/9499881/7480098/2a0ef738-f377-11e4-8341-e77a7a15ce58.png)
+![screen0 2 1](https://cloud.githubusercontent.com/assets/9499881/7653191/db14aadc-fb24-11e4-8bae-89334738fcbb.png)
 
 ✔ **Блокировка доступа в один клик**<br>
 Просто нажмите правой кнопкой мыши на программе (.exe) или библиотеке (.dll), чтобы заблокировать ей доступ в интернет.<br>
-![untitled-1](https://cloud.githubusercontent.com/assets/9499881/7480083/0697cd16-f377-11e4-88cc-fd9073d3df89.png)<br>
+![1](https://cloud.githubusercontent.com/assets/9499881/7653228/22b33980-fb25-11e4-8f31-62982a1403e6.png)<br>
 Требуется исправить путь до программы в "AddContextMenu.reg" и выполнить его.
 
 ✔ **Удаление блокировок для удаленных программ**<br>
