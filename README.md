@@ -35,4 +35,4 @@ Just move the program (.exe) or library (.dll) in the CAI application and Intern
 
 If you need a program with an English translation, please write to email and I'll receive it soon.
 
-**Feedback:** r57zone[dog]gmail.com
+**Feedback:** r57zone[at]gmail.com
