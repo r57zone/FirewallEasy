@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComObj, ShellAPI, XPMan, ComCtrls, ExtCtrls;
+  Dialogs, StdCtrls, ComObj, ShellAPI, XPMan, ComCtrls, ExtCtrls, Menus;
 
 type
   TForm1 = class(TForm)
@@ -21,6 +21,8 @@ type
     Edit1: TEdit;
     Label2: TLabel;
     Label3: TLabel;
+    PopupMenu1: TPopupMenu;
+    N1: TMenuItem;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
@@ -37,7 +39,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure Edit1Change(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure ListBox1KeyDown(Sender: TObject; var Key: Word;
+    procedure ListBox1KeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
   protected
     procedure WMDropFiles (var Msg: TMessage); message wm_DropFiles;
@@ -113,12 +115,12 @@ NewRule.Action:=NET_FW_ACTION_BLOCK; //NET_FW_ACTION_BLOCK - запретить, NET_FW_A
 RulesObject.Add(NewRule);
 end;
 
-function CutName(name:string):string;
+function CutName(name:string;count:integer):string;
 begin
-if length(name)>33 then result:=copy(name,1,30)+'...' else result:=name;
+if length(name)>count then result:=copy(name,1,count-3)+'...' else result:=name;
 end;
 
-function CutNameSB(name:string):string;
+function ExctractRuleName(name:string):string;
 begin
 result:=copy(name,1,length(name)-20);
 end;
@@ -131,10 +133,10 @@ RuleNames.Add(ExtractFileName(OpenDialog1.FileName)+' '+DateToStr(Date)+' '+Time
 RulePaths.Add(OpenDialog1.FileName);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-ListBox1.Items.Add(CutName(RuleNames.Strings[RuleNames.Count-1])+^I+CutName(RulePaths.Strings[RulePaths.Count-1]));
-StatusBar1.SimpleText:=' Правило для приложения "'+ExtractFileName(OpenDialog1.FileName)+'" успешно создано';
+ListBox1.Items.Add(CutName(ExctractRuleName(RuleNames.Strings[RuleNames.Count-1]),27)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],27));
+StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(OpenDialog1.FileName),23)+'" успешно создано';
 ChangedRules:=true;
-end else StatusBar1.SimpleText:=' Правило для приложения "'+ExtractFileName(OpenDialog1.FileName)+'" уже существует';
+end else StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(OpenDialog1.FileName),24)+'" уже существует';
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
@@ -142,7 +144,7 @@ begin
 if ListBox1.ItemIndex<>-1 then begin
 RemoveFromFirewall(RuleNames.Strings[ListBox1.ItemIndex]);
 RemoveFromFirewall(RuleNames.Strings[ListBox1.ItemIndex]);
-StatusBar1.SimpleText:=' Правило для приложения "'+CutNameSB(RuleNames.Strings[ListBox1.ItemIndex])+'" успешно удалено';
+StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExctractRuleName(RuleNames.Strings[ListBox1.ItemIndex]),23)+'" успешно удалено';
 RuleNames.Delete(ListBox1.ItemIndex);
 RulePaths.Delete(ListBox1.ItemIndex);
 ListBox1.Items.Delete(ListBox1.ItemIndex);
@@ -181,7 +183,7 @@ RuleNames.Add(ExtractFileName(Path)+' '+DateToStr(Date)+' '+TimeToStr(Time));
 RulePaths.Add(Path);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-ListBox1.Items.Add(CutName(RuleNames.Strings[RuleNames.Count-1])+^I+CutName(RulePaths.Strings[RulePaths.Count-1]));
+ListBox1.Items.Add(CutName(ExctractRuleName(RuleNames.Strings[RuleNames.Count-1]),27)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],27));
 end;
 end;
 DragFinish(Msg.WParam);
@@ -194,7 +196,7 @@ end;
 
 procedure TForm1.StatusBar1Click(Sender: TObject);
 begin
-Application.MessageBox('Управление доступом в интернет 0.2.1'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 15.05.2015','О программе...',0);
+Application.MessageBox('Управление доступом в интернет 0.2.2'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 20.06.2015','О программе...',0);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -213,7 +215,7 @@ for i:=0 to Rules.Count-1 do
 if pos('#',rules.Strings[i])>0 then begin
 RuleNames.Add(copy(rules.Strings[i],1,pos('#',rules.Strings[i])-1));
 RulePaths.Add(copy(rules.Strings[i],pos('#',rules.Strings[i])+1,length(rules.Strings[i])-pos('#',rules.Strings[i])));
-ListBox1.Items.Add(CutName(RuleNames.Strings[i])+^I+CutName(RulePaths.Strings[i]));
+ListBox1.Items.Add(CutName(ExctractRuleName(RuleNames.Strings[i]),27)+^I+CutName(RulePaths.Strings[i],27));
 end;
 
 //Повторный запуск, передача ParamStr(1)
@@ -225,8 +227,8 @@ RuleNames.Add(ExtractFileName(ParamStr(1))+' '+DateToStr(Date)+' '+TimeToStr(Tim
 RulePaths.Add(ParamStr(1));
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-ListBox1.Items.Add(CutName(RuleNames.Strings[RuleNames.Count-1])+^I+CutName(RulePaths.Strings[RulePaths.Count-1]));
-StatusBar1.SimpleText:=' Правило для приложения "'+ExtractFileName(ParamStr(1))+'" успешно создано';
+ListBox1.Items.Add(CutName(ExctractRuleName(RuleNames.Strings[RuleNames.Count-1]),27)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],27));
+StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(ParamStr(1)),23)+'" успешно создано';
 ChangedRules:=true;
 //Close;
 end;
@@ -245,7 +247,7 @@ procedure TForm1.ListBox1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
 if ListBox1.ItemIndex<>-1 then begin
-StatusBar1.SimpleText:=' '+RulePaths.Strings[ListBox1.ItemIndex];
+StatusBar1.SimpleText:=' '+CutName(RulePaths.Strings[ListBox1.ItemIndex],63);
 if Button=mbRight then ShellExecute(0, 'open', 'explorer', PChar('/select, '+RulePaths.Strings[ListBox1.ItemIndex]),nil,SW_SHOW);
 end;
 end;
@@ -298,7 +300,7 @@ i:integer;
 begin
 for i:=0 to RuleNames.Count-1 do
 if pos(AnsiLowerCase(Edit1.Text),AnsiLowerCase(RuleNames.Strings[i]))>0 then ListBox1.Selected[i]:=true;
-if ListBox1.ItemIndex<>-1 then StatusBar1.SimpleText:=' '+RulePaths.Strings[ListBox1.ItemIndex];
+if ListBox1.ItemIndex<>-1 then StatusBar1.SimpleText:=' '+CutName(RulePaths.Strings[ListBox1.ItemIndex],63);
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
@@ -308,10 +310,10 @@ StatusBar1.ControlStyle:=ControlStyle-[csParentBackground];
 StatusBar1.Color:=clWhite;
 end;
 
-procedure TForm1.ListBox1KeyDown(Sender: TObject; var Key: Word;
+procedure TForm1.ListBox1KeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-if ListBox1.ItemIndex<>-1 then StatusBar1.SimpleText:=' '+RulePaths.Strings[ListBox1.ItemIndex];
+if ListBox1.ItemIndex<>-1 then StatusBar1.SimpleText:=' '+CutName(RulePaths.Strings[ListBox1.ItemIndex],63);
 end;
 
 end.

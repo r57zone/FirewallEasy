@@ -4,8 +4,8 @@ object Form1: TForm1
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = #1059#1087#1088#1072#1074#1083#1077#1085#1080#1077' '#1076#1086#1089#1090#1091#1087#1086#1084' '#1074' '#1080#1085#1090#1077#1088#1085#1077#1090
-  ClientHeight = 367
-  ClientWidth = 476
+  ClientHeight = 365
+  ClientWidth = 411
   Color = clWhite
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
@@ -46,7 +46,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 227
+    Left = 200
     Top = 40
     Width = 92
     Height = 17
@@ -88,7 +88,7 @@ object Form1: TForm1
   object ListBox1: TListBox
     Left = 8
     Top = 60
-    Width = 457
+    Width = 393
     Height = 217
     BorderStyle = bsNone
     Font.Charset = RUSSIAN_CHARSET
@@ -101,8 +101,8 @@ object Form1: TForm1
     ParentShowHint = False
     ShowHint = True
     TabOrder = 3
-    TabWidth = 125
-    OnKeyDown = ListBox1KeyDown
+    TabWidth = 110
+    OnKeyUp = ListBox1KeyUp
     OnMouseDown = ListBox1MouseDown
   end
   object Button4: TButton
@@ -115,7 +115,7 @@ object Form1: TForm1
     OnClick = Button4Click
   end
   object Button5: TButton
-    Left = 392
+    Left = 328
     Top = 315
     Width = 75
     Height = 25
@@ -125,17 +125,19 @@ object Form1: TForm1
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 348
-    Width = 476
+    Top = 346
+    Width = 411
     Height = 19
     Panels = <>
+    ParentShowHint = False
+    ShowHint = True
     SimplePanel = True
     OnClick = StatusBar1Click
   end
   object Edit1: TEdit
     Left = 9
     Top = 285
-    Width = 456
+    Width = 393
     Height = 25
     Font.Charset = RUSSIAN_CHARSET
     Font.Color = clSilver
@@ -157,5 +159,12 @@ object Form1: TForm1
     Filter = #1055#1088#1080#1083#1086#1078#1077#1085#1080#1077' (.exe) '#1080' '#1073#1080#1073#1083#1080#1086#1090#1077#1082#1080' (.dll)|*.exe;*.dll'
     Left = 168
     Top = 120
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 200
+    Top = 88
+    object N1: TMenuItem
+      Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1092#1072#1081#1083#1072
+    end
   end
 end
