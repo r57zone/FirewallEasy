@@ -15,13 +15,13 @@ type
     ListBox1: TListBox;
     Button4: TButton;
     Button5: TButton;
-    StatusBar1: TStatusBar;
     OpenDialog1: TOpenDialog;
     Label2: TLabel;
     Label3: TLabel;
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
     Edit1: TEdit;
+    StatusBar1: TStatusBar;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
@@ -127,7 +127,7 @@ RuleNames.Add(ExtractFileName(OpenDialog1.FileName)+' '+DateToStr(Date)+' '+Time
 RulePaths.Add(OpenDialog1.FileName);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),24)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
+ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
 StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(OpenDialog1.FileName),23)+'" успешно создано';
 ChangedRules:=true;
 end else StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(OpenDialog1.FileName),24)+'" уже существует';
@@ -177,7 +177,7 @@ RuleNames.Add(ExtractFileName(Path)+' '+DateToStr(Date)+' '+TimeToStr(Time));
 RulePaths.Add(Path);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),24)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
+ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
 end;
 end;
 DragFinish(Msg.WParam);
@@ -209,7 +209,7 @@ for i:=0 to Rules.Count-1 do
 if pos('#',rules.Strings[i])>0 then begin
 RuleNames.Add(copy(rules.Strings[i],1,pos('#',rules.Strings[i])-1));
 RulePaths.Add(copy(rules.Strings[i],pos('#',rules.Strings[i])+1,length(rules.Strings[i])-pos('#',rules.Strings[i])));
-ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[i]),24)+^I+CutName(RulePaths.Strings[i],38));
+ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[i]),23)+^I+CutName(RulePaths.Strings[i],38));
 end;
 
 //Повторный запуск, передача ParamStr(1)
@@ -221,7 +221,7 @@ RuleNames.Add(ExtractFileName(ParamStr(1))+' '+DateToStr(Date)+' '+TimeToStr(Tim
 RulePaths.Add(ParamStr(1));
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
 AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),24)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
+ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
 StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(ParamStr(1)),22)+'" успешно создано';
 ChangedRules:=true;
 //Close;
@@ -308,7 +308,6 @@ procedure TForm1.FormShow(Sender: TObject);
 begin
 ListBox1.SetFocus;
 StatusBar1.ControlStyle:=ControlStyle-[csParentBackground];
-StatusBar1.Color:=clWhite;
 end;
 
 procedure TForm1.ListBox1KeyUp(Sender: TObject; var Key: Word;
