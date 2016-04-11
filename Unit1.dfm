@@ -109,17 +109,6 @@ object Form1: TForm1
     TabOrder = 5
     OnClick = Button5Click
   end
-  object StatusBar1: TStatusBar
-    Left = 0
-    Top = 301
-    Width = 408
-    Height = 19
-    Panels = <>
-    ParentShowHint = False
-    ShowHint = True
-    SimplePanel = True
-    OnClick = StatusBar1Click
-  end
   object Edit1: TEdit
     Left = 8
     Top = 246
@@ -131,9 +120,19 @@ object Form1: TForm1
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 7
+    TabOrder = 6
     Text = #1055#1086#1080#1089#1082'...'
+    OnChange = Edit1Change
     OnMouseDown = Edit1MouseDown
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Top = 301
+    Width = 408
+    Height = 19
+    Panels = <>
+    SimplePanel = True
+    OnClick = StatusBar1Click
   end
   object XPManifest1: TXPManifest
     Left = 48
