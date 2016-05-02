@@ -34,6 +34,6 @@ Just move the program (.exe) or library (.dll) in the CAI application and Intern
 
 **[Download the latest version](https://github.com/r57zone/CAI/releases)**
 
-If you need a program with an English translation, please write to email and I'll receive it soon.
+If you need a program with an English translation, please write to email and I'll will build it soon.
 
 **Feedback:** r57zone[at]gmail.com
