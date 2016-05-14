@@ -114,15 +114,15 @@ begin
   RulesObject.Add(NewRule);
 end;
 
-function CutName(name: string; count: integer):string;
+function CutName(Name: string; Count: integer):string;
 begin
-  if length(name)>count then result:=copy(name,1,count-3)+'...' else result:=name;
+  if Length(name)>Count then Result:=Copy(Name,1,Count-3)+'...' else Result:=Name;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   if OpenDialog1.Execute then
-    if pos(OpenDialog1.FileName,RulePaths.Text)=0 then begin
+    if Pos(OpenDialog1.FileName,RulePaths.Text)=0 then begin
       RuleNames.Add(ExtractFileName(OpenDialog1.FileName)+' '+DateToStr(Date)+' '+TimeToStr(Time));
       RulePaths.Add(OpenDialog1.FileName);
       AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
@@ -170,7 +170,7 @@ begin
     DragQueryFile(Msg.WParam, i, Filename, size);
     Path:=StrPas(Filename);
     StrDispose(Filename);
-    if (AnsiLowerCase(ExtractFileExt(path))='.dll') or (AnsiLowerCase(ExtractFileExt(path))='.exe') then if FileExists(path) then
+    if (AnsiLowerCase(ExtractFileExt(path))='.dll') or (AnsiLowerCase(ExtractFileExt(path))='.exe') then if FileExists(Path) then
       if pos(Path,RulePaths.Text)=0 then begin
         inc(c);
         RuleNames.Add(ExtractFileName(Path)+' '+DateToStr(Date)+' '+TimeToStr(Time));
@@ -195,9 +195,10 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
-  Rules: TStringList; i: integer;
+  Rules: TStringList;
+  i: integer;
+  WND:HWND;
 begin
-  Application.Title:=Caption;
   ChangedRules:=false;
   DragAcceptFiles(Handle, True);
   Rules:=TStringList.Create;
@@ -213,10 +214,14 @@ begin
     end;
 
   //Повторный запуск, передача ParamStr(1)
+  WND:=FindWindow('TForm1', 'Управление доступом в интернет');
+  if WND<>0 then while WND<>0 do begin sleep(100); WND:=FindWindow('TForm1', 'Управление доступом в интернет'); end;
+  Caption:='Управление доступом в интернет';
+  Application.Title:=Caption;
 
   if ParamCount>0 then
     if (AnsiLowerCase(ExtractFileExt(ParamStr(1)))='.dll') or (AnsiLowerCase(ExtractFileExt(ParamStr(1)))='.exe') then begin
-      if pos(ParamStr(1),RulePaths.Text)=0 then begin
+      if Pos(ParamStr(1),RulePaths.Text)=0 then begin
         RuleNames.Add(ExtractFileName(ParamStr(1))+' '+DateToStr(Date)+' '+TimeToStr(Time));
         RulePaths.Add(ParamStr(1));
         AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
@@ -224,10 +229,8 @@ begin
         ListBox1.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
         StatusBar1.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(ParamStr(1)),22)+'" успешно создано';
         ChangedRules:=true;
-        //Close;
       end else StatusBar1.SimpleText:=' Не удалось создать правило для приложения "'+CutName(ExtractFileName(ParamStr(1)),22)+'"';
     end;
-  Rules.Free;
 end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -308,6 +311,8 @@ procedure TForm1.FormShow(Sender: TObject);
 begin
   ListBox1.SetFocus;
   StatusBar1.ControlStyle:=ControlStyle-[csParentBackground];
+  if ParamStr(1)<>'' then
+    Close;
 end;
 
 procedure TForm1.ListBox1KeyUp(Sender: TObject; var Key: Word;
