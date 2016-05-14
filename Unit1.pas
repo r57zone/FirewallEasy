@@ -4,14 +4,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComObj, ShellAPI, XPMan, ComCtrls, ExtCtrls, Menus;
+  Dialogs, StdCtrls, ComObj, ShellAPI, ComCtrls, ExtCtrls, Menus;
 
 type
   TForm1 = class(TForm)
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
-    XPManifest1: TXPManifest;
     ListBox1: TListBox;
     Button4: TButton;
     Button5: TButton;
@@ -57,6 +56,7 @@ var
 implementation
 
 {$R *.dfm}
+{$R UAC.res}
 
 procedure RemoveFromFirewall(const RuleName:string);
 const

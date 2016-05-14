@@ -134,10 +134,6 @@ object Form1: TForm1
     SimplePanel = True
     OnClick = StatusBar1Click
   end
-  object XPManifest1: TXPManifest
-    Left = 48
-    Top = 72
-  end
   object OpenDialog1: TOpenDialog
     Filter = #1055#1088#1080#1083#1086#1078#1077#1085#1080#1077' (.exe) '#1080' '#1073#1080#1073#1083#1080#1086#1090#1077#1082#1080' (.dll)|*.exe;*.dll'
     Left = 168
