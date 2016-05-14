@@ -190,7 +190,7 @@ end;
 
 procedure TForm1.StatusBar1Click(Sender: TObject);
 begin
-  Application.MessageBox('Управление доступом в интернет 0.2.3'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 23.08.2015','О программе...',0);
+  Application.MessageBox('Управление доступом в интернет 0.3'+#13#10+'https://github.com/r57zone'+#13#10+'Дата последнего обновления: 14.05.2016','О программе...',0);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
