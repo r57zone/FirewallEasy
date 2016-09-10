@@ -31,7 +31,7 @@ Just move the program (.exe) or library (.dll) in the CAI application and Intern
 
 ## Download
 >Version for Windows 7, Windows 8.1, Windows 10.<br>
->If you need a program with an English translation, please write to email and I'll will build it soon.
+>If you need a program with an English translation, please write to email and I'll will build it soon.<br>
 **[Download](https://github.com/r57zone/CAI/releases)**<br>
 
 ## Feedback
