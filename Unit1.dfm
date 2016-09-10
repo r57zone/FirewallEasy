@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 123
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  Caption = 'CAI'
+  Caption = 'App'
   ClientHeight = 320
   ClientWidth = 408
   Color = clBtnFace
@@ -19,7 +19,7 @@ object Form1: TForm1
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Label2: TLabel
+  object NameLabel: TLabel
     Left = 9
     Top = 8
     Width = 50
@@ -32,7 +32,7 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
   end
-  object Label3: TLabel
+  object PathLabel: TLabel
     Left = 160
     Top = 8
     Width = 75
@@ -45,34 +45,34 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
   end
-  object Button1: TButton
+  object AddBtn: TButton
     Left = 8
     Top = 271
     Width = 75
     Height = 25
     Caption = #1044#1086#1073#1072#1074#1080#1090#1100
     TabOrder = 0
-    OnClick = Button1Click
+    OnClick = AddBtnClick
   end
-  object Button2: TButton
+  object RemoveBtn: TButton
     Left = 88
     Top = 271
     Width = 75
     Height = 25
     Caption = #1059#1076#1072#1083#1080#1090#1100
     TabOrder = 1
-    OnClick = Button2Click
+    OnClick = RemoveBtnClick
   end
-  object Button3: TButton
+  object CheckBtn: TButton
     Left = 168
     Top = 271
     Width = 75
     Height = 25
     Caption = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '
     TabOrder = 2
-    OnClick = Button3Click
+    OnClick = CheckBtnClick
   end
-  object ListBox1: TListBox
+  object ListBox: TListBox
     Left = 8
     Top = 24
     Width = 393
@@ -88,28 +88,28 @@ object Form1: TForm1
     ShowHint = True
     TabOrder = 3
     TabWidth = 100
-    OnKeyUp = ListBox1KeyUp
-    OnMouseDown = ListBox1MouseDown
+    OnKeyUp = ListBoxKeyUp
+    OnMouseDown = ListBoxMouseDown
   end
-  object Button4: TButton
+  object FirewallBtn: TButton
     Left = 248
     Top = 271
     Width = 75
     Height = 25
     Caption = #1041#1088#1072#1085#1076#1084#1072#1091#1101#1088
     TabOrder = 4
-    OnClick = Button4Click
+    OnClick = FirewallBtnClick
   end
-  object Button5: TButton
+  object CloseBtn: TButton
     Left = 328
     Top = 271
     Width = 75
     Height = 25
     Caption = #1042#1099#1093#1086#1076
     TabOrder = 5
-    OnClick = Button5Click
+    OnClick = CloseBtnClick
   end
-  object Edit1: TEdit
+  object Search: TEdit
     Left = 8
     Top = 246
     Width = 393
@@ -122,17 +122,17 @@ object Form1: TForm1
     ParentFont = False
     TabOrder = 6
     Text = #1055#1086#1080#1089#1082'...'
-    OnChange = Edit1Change
-    OnMouseDown = Edit1MouseDown
+    OnChange = SearchChange
+    OnMouseDown = SearchMouseDown
   end
-  object StatusBar1: TStatusBar
+  object StatusBar: TStatusBar
     Left = 0
     Top = 301
     Width = 408
     Height = 19
     Panels = <>
     SimplePanel = True
-    OnClick = StatusBar1Click
+    OnClick = StatusBarClick
   end
   object OpenDialog1: TOpenDialog
     Filter = #1055#1088#1080#1083#1086#1078#1077#1085#1080#1077' (.exe) '#1080' '#1073#1080#1073#1083#1080#1086#1090#1077#1082#1080' (.dll)|*.exe;*.dll'
