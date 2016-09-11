@@ -1,6 +1,8 @@
 # Firewall Easy (Ru)
 Приложение позволяет заблокировать доступ в интернет другим приложения или библиотекам, с помощью Брандмауэр Windows.
 
+##Особенности
+
 ✔ **Блокировка доступа в один клик**<br>
 Просто нажмите правой кнопкой мыши на программе (.exe) или библиотеке (.dll), чтобы заблокировать ей доступ в интернет.<br>
 ![1](https://cloud.githubusercontent.com/assets/9499881/7653228/22b33980-fb25-11e4-8f31-62982a1403e6.png)<br>
@@ -21,6 +23,8 @@
 
 # Firewall Easy (En)
 Application allows you to block Internet access to other applications or libraries using the Windows Firewall.
+
+##Features
 
 ✔ **Blocking access in a single click**<br>
 Simply right-click on the program (.exe) or library (.dll), to block her access to the Internet.<br>
