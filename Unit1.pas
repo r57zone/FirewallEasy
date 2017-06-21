@@ -7,17 +7,17 @@ uses
   Dialogs, StdCtrls, ComObj, ShellAPI, ComCtrls, ExtCtrls, Menus, Registry;
 
 type
-  TForm1 = class(TForm)
+  TMain = class(TForm)
     AddBtn: TButton;
     RemoveBtn: TButton;
     CheckBtn: TButton;
     ListBox: TListBox;
     FirewallBtn: TButton;
     CloseBtn: TButton;
-    OpenDialog1: TOpenDialog;
+    OpenDialog: TOpenDialog;
     NameLabel: TLabel;
     PathLabel: TLabel;
-    PopupMenu1: TPopupMenu;
+    PopupMenu: TPopupMenu;
     N1: TMenuItem;
     Search: TEdit;
     StatusBar: TStatusBar;
@@ -50,7 +50,7 @@ type
   end;
 
 var
-  Form1: TForm1;
+  Main: TMain;
   RuleNames, RulePaths: TStringList;
   CloseDuplicate: boolean;
   CountBlock: integer;
@@ -118,79 +118,83 @@ end;
 
 function CutName(Name: string; Count: integer):string;
 begin
-  if Length(name)>Count then Result:=Copy(Name,1,Count-3)+'...' else Result:=Name;
+  if Length(name) > Count then
+    Result:=Copy(Name, 1, Count-3) + '...'
+  else
+    Result:=Name;
 end;
 
-procedure TForm1.AddBtnClick(Sender: TObject);
+procedure TMain.AddBtnClick(Sender: TObject);
 begin
-  if OpenDialog1.Execute then
-    if Pos(OpenDialog1.FileName,RulePaths.Text)=0 then begin
-      RuleNames.Add(ExtractFileName(OpenDialog1.FileName)+' '+DateToStr(Date)+' '+TimeToStr(Time));
-      RulePaths.Add(OpenDialog1.FileName);
-      AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
-      AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
-      StatusBar.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(OpenDialog1.FileName),23)+'" успешно создано';
-    end else StatusBar.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(OpenDialog1.FileName),24)+'" уже существует';
+  if OpenDialog.Execute then
+    if Pos(OpenDialog.FileName,RulePaths.Text) = 0 then begin
+      RuleNames.Add(ExtractFileName(OpenDialog.FileName) + ' ' +DateToStr(Date) + ' ' + TimeToStr(Time));
+      RulePaths.Add(OpenDialog.FileName);
+      AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], true);
+      AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], false);
+      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
+      StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(OpenDialog.FileName), 23) + '" успешно создано';
+    end else StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(OpenDialog.FileName), 24) + '" уже существует';
 end;
 
-procedure TForm1.RemoveBtnClick(Sender: TObject);
+procedure TMain.RemoveBtnClick(Sender: TObject);
 begin
-  if ListBox.ItemIndex<>-1 then begin
+  if ListBox.ItemIndex <> - 1 then begin
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
-    StatusBar.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]),22)+'" успешно удалено';
+    StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22) + '" успешно удалено';
     RuleNames.Delete(ListBox.ItemIndex);
     RulePaths.Delete(ListBox.ItemIndex);
     ListBox.Items.Delete(ListBox.ItemIndex);
   end else StatusBar.SimpleText:=' Выберите правило';
 end;
 
-procedure TForm1.FirewallBtnClick(Sender: TObject);
+procedure TMain.FirewallBtnClick(Sender: TObject);
 begin
   ShellExecute(0,'open','WF.msc',nil,nil,SW_ShowNormal);
 end;
 
-procedure TForm1.CloseBtnClick(Sender: TObject);
+procedure TMain.CloseBtnClick(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TForm1.WMDropFiles(var Msg: TMessage);
+procedure TMain.WMDropFiles(var Msg: TMessage);
 var
-i, c, Amount, Size: integer;
-Filename: PChar; Path: string;
+  i, c, Amount, Size: integer;
+  Filename: PChar; Path: string;
 begin
   inherited;
   Amount:=DragQueryFile(Msg.WParam, $FFFFFFFF, Filename, 255);
   c:=0;
   for i:=0 to Amount-1 do begin
    Size:=DragQueryFile(Msg.WParam, i, nil, 0) + 1;
-   Filename:=StrAlloc(size);
+   Filename:=StrAlloc(Size);
     DragQueryFile(Msg.WParam, i, Filename, size);
     Path:=StrPas(Filename);
     StrDispose(Filename);
-    if (AnsiLowerCase(ExtractFileExt(path))='.dll') or (AnsiLowerCase(ExtractFileExt(path))='.exe') then if FileExists(Path) then
-      if pos(Path,RulePaths.Text)=0 then begin
-        inc(c);
-        RuleNames.Add(ExtractFileName(Path)+' '+DateToStr(Date)+' '+TimeToStr(Time));
-        RulePaths.Add(Path);
-        AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
-        AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-        ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
-      end;
+    if AnsiLowerCase(ExtractFileExt(path)) = '.exe' then
+      if FileExists(Path) then
+        if pos(Path,RulePaths.Text)=0 then begin
+          inc(c);
+          RuleNames.Add(ExtractFileName(Path) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
+          RulePaths.Add(Path);
+          AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], true);
+          AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], false);
+          ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
+        end;
   end;
   DragFinish(Msg.WParam);
-  if c>0 then StatusBar.SimpleText:=' Правил успешно создано : '+IntToStr(c);
-  if c=0 then StatusBar.SimpleText:=' Не удалось создать правила';
+  if c > 0 then StatusBar.SimpleText:=' Правил успешно создано : '+IntToStr(c);
+  if c = 0 then StatusBar.SimpleText:=' Не удалось создать правила';
 end;
 
-procedure TForm1.StatusBarClick(Sender: TObject);
+procedure TMain.StatusBarClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption+' 0.5 beta'+#13#10+'Последнее обновление: 10.09.2016'+#13#10+'https://r57zone.github.io'+#13#10+'r57zone@gmail.com'),'О программе...',0);
+  Application.MessageBox(PChar(Caption+' 0.5.1 beta' + #13#10 + 'Последнее обновление: 21.06.2017' + #13#10 + 'https://r57zone.github.io' + #13#10 + 'r57zone@gmail.com'), 'О программе...', 0);
 end;
 
-procedure TForm1.LoadRegRules;
+procedure TMain.LoadRegRules;
 var
   Rules: TStringList;
   i: integer;
@@ -210,12 +214,12 @@ begin
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count-1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
-    if (pos('EmbedCtxt=FirewallEasy',RegName)>0) and (pos('Dir=In',RegName)>0) then begin
-      Delete(RegName,1,pos('App=',RegName)+3);
-      RulePaths.Add(Copy(RegName,1,pos('|',RegName)-1));
-      Delete(RegName,1,pos('Name=',RegName)+4);
-      RuleNames.Add(Copy(RegName,1,pos('|',RegName)-1));
-      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
+    if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) then begin
+      Delete(RegName, 1, pos('App=', RegName) + 3);
+      RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
+      Delete(RegName, 1, Pos('Name=', RegName) + 4);
+      RuleNames.Add(Copy(RegName, 1, Pos('|', RegName) -1));
+      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
     end;
   end;
   Reg.CloseKey;
@@ -233,7 +237,7 @@ begin
   SendMessage(TRGWND,WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TMain.FormCreate(Sender: TObject);
 var
   WND: HWND;
 begin
@@ -244,55 +248,55 @@ begin
   LoadRegRules;
 
   //Повторный запуск, передача ParamStr(1)
-  if ParamCount>0 then
-    if (AnsiLowerCase(ExtractFileExt(ParamStr(1)))='.dll') or (AnsiLowerCase(ExtractFileExt(ParamStr(1)))='.exe') then begin
-      if Pos(ParamStr(1),RulePaths.Text)=0 then begin
-        RuleNames.Add(ExtractFileName(ParamStr(1))+' '+DateToStr(Date)+' '+TimeToStr(Time));
+  if ParamCount > 0 then
+    if AnsiLowerCase(ExtractFileExt(ParamStr(1))) = '.exe' then begin
+      if Pos(ParamStr(1),RulePaths.Text) = 0 then begin
+        RuleNames.Add(ExtractFileName(ParamStr(1)) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
         RulePaths.Add(ParamStr(1));
-        AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],true);
-        AddToFirewall(RuleNames.Strings[RuleNames.Count-1],RulePaths.Strings[RulePaths.Count-1],false);
-        ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23)+^I+CutName(RulePaths.Strings[RulePaths.Count-1],38));
-        StatusBar.SimpleText:=' Правило для приложения "'+CutName(ExtractFileName(ParamStr(1)),22)+'" успешно создано';
+        AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], true);
+        AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], false);
+        ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
+        StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(ParamStr(1)),22)+'" успешно создано';
         inc(CountBlock);
-        WND:=FindWindow('TForm1', 'Firewall Easy');
-        if WND<>0 then begin
+        WND:=FindWindow('TMain', 'Firewall Easy');
+        if WND <> 0 then begin
           CloseDuplicate:=true;
           SendMessageToHandle(WND,'%ADDED%');
         end;
 
-      end else StatusBar.SimpleText:=' Не удалось создать правило для приложения "'+CutName(ExtractFileName(ParamStr(1)),22)+'"';
+      end else StatusBar.SimpleText:=' Не удалось создать правило для приложения "' + CutName(ExtractFileName(ParamStr(1)), 22) + '"';
     end;
 
-  if CloseDuplicate=false then
+  if CloseDuplicate = false then
     Caption:='Firewall Easy';
   Application.Title:=Caption;
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   RuleNames.Free;
   RulePaths.Free;
 end;
 
-procedure TForm1.ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TMain.ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
   P: TPoint;
 begin
-  if Button=mbRight then begin
+  if Button = mbRight then begin
     P.X:=X;
     P.Y:=Y;
     ListBox.ItemIndex:=ListBox.ItemAtPos(P,true);
   end;
-  if ListBox.ItemIndex<>-1 then begin
-    StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex],63);
-    if Button=mbRight then ShellExecute(0, 'open', 'explorer', PChar('/select, '+RulePaths.Strings[ListBox.ItemIndex]),nil,SW_SHOW);
+  if ListBox.ItemIndex <> -1 then begin
+    StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex], 63);
+    if Button=mbRight then ShellExecute(0, 'open', 'explorer', PChar('/select, '+RulePaths.Strings[ListBox.ItemIndex]), nil, SW_SHOW);
   end;
 end;
 
-procedure TForm1.CheckBtnClick(Sender: TObject);
+procedure TMain.CheckBtnClick(Sender: TObject);
 var
-i, c: integer;
+  i, c: integer;
 begin
   c:=0;
   for i:=RulePaths.Count-1 downto 0 do
@@ -304,46 +308,46 @@ begin
       ListBox.Items.Delete(i);
       Inc(c);
     end;
-  if c<>0 then StatusBar.SimpleText:=' Удалено правил для несуществующих приложений : '+IntToStr(c) else
+  if c <> 0 then StatusBar.SimpleText:=' Удалено правил для несуществующих приложений : '+IntToStr(c) else
     StatusBar.SimpleText:=' Правил для несуществующих приложений не найдено';
 end;
 
-procedure TForm1.Edit1KeyDown(Sender: TObject; var Key: Word;
+procedure TMain.Edit1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if Search.Text='Поиск...' then begin Search.Font.Color:=clBlack; Search.Clear; end;
 end;
 
-procedure TForm1.SearchMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TMain.SearchMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if Search.Text='Поиск...' then begin Search.Font.Color:=clBlack; Search.Clear; end;
 end;
 
-procedure TForm1.SearchChange(Sender: TObject);
+procedure TMain.SearchChange(Sender: TObject);
 var
 i: integer;
 begin
   for i:=0 to RuleNames.Count-1 do
-    if Pos(AnsiLowerCase(Search.Text),AnsiLowerCase(RuleNames.Strings[i]))>0 then ListBox.Selected[i]:=true;
-  if ListBox.ItemIndex<>-1 then StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex],63);
+    if Pos(AnsiLowerCase(Search.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then ListBox.Selected[i]:=true;
+  if ListBox.ItemIndex <> -1 then StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex],63);
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TMain.FormShow(Sender: TObject);
 begin
   ListBox.SetFocus;
   if CloseDuplicate then Close;
 end;
 
-procedure TForm1.ListBoxKeyUp(Sender: TObject; var Key: Word;
+procedure TMain.ListBoxKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if ListBox.ItemIndex<>-1 then StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex],63);
+  if ListBox.ItemIndex <> -1 then StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 63);
 end;
 
-procedure TForm1.WMCopyData(var Msg: TWMCopyData);
+procedure TMain.WMCopyData(var Msg: TWMCopyData);
 begin
-  if PChar(TWMCopyData(msg).CopyDataStruct.lpData)='%ADDED%' then begin
+  if PChar(TWMCopyData(msg).CopyDataStruct.lpData) = '%ADDED%' then begin
     inc(CountBlock);
     LoadRegRules;
     StatusBar.SimpleText:=' Правил успешно создано : '+IntToStr(CountBlock);

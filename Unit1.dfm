@@ -1,4 +1,4 @@
-object Form1: TForm1
+object Main: TMain
   Left = 192
   Top = 123
   BorderIcons = [biSystemMenu, biMinimize]
@@ -134,14 +134,14 @@ object Form1: TForm1
     SimplePanel = True
     OnClick = StatusBarClick
   end
-  object OpenDialog1: TOpenDialog
+  object OpenDialog: TOpenDialog
     Filter = #1055#1088#1080#1083#1086#1078#1077#1085#1080#1077' (.exe) '#1080' '#1073#1080#1073#1083#1080#1086#1090#1077#1082#1080' (.dll)|*.exe;*.dll'
-    Left = 168
-    Top = 88
+    Left = 16
+    Top = 32
   end
-  object PopupMenu1: TPopupMenu
-    Left = 200
-    Top = 56
+  object PopupMenu: TPopupMenu
+    Left = 48
+    Top = 32
     object N1: TMenuItem
       Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1092#1072#1081#1083#1072
     end
