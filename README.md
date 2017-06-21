@@ -12,7 +12,7 @@
 Просто перенесите программы (.exe) в приложение и доступ в интернет им будет заблокирован.
 
 ## Скриншоты
-![](https://cloud.githubusercontent.com/assets/9499881/9428097/2d54caba-49af-11e5-9088-860e39d9b456.png)
+![](https://user-images.githubusercontent.com/9499881/27404229-58500bd8-56de-11e7-9a5a-124ed9a97a68.png)
 
 ## Загрузка
 >Версия для 7, Windows 8.1, Windows 10.<br>
