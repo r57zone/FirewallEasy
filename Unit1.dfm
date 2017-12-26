@@ -19,7 +19,7 @@ object Main: TMain
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object NameLabel: TLabel
+  object NameAppLbl: TLabel
     Left = 9
     Top = 8
     Width = 50
@@ -32,7 +32,7 @@ object Main: TMain
     Font.Style = []
     ParentFont = False
   end
-  object PathLabel: TLabel
+  object AppPathLbl: TLabel
     Left = 160
     Top = 8
     Width = 75
@@ -51,17 +51,17 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1044#1086#1073#1072#1074#1080#1090#1100
-    TabOrder = 0
+    TabOrder = 2
     OnClick = AddBtnClick
   end
-  object RemoveBtn: TButton
+  object RemBtn: TButton
     Left = 88
     Top = 271
     Width = 75
     Height = 25
     Caption = #1059#1076#1072#1083#1080#1090#1100
-    TabOrder = 1
-    OnClick = RemoveBtnClick
+    TabOrder = 3
+    OnClick = RemBtnClick
   end
   object CheckBtn: TButton
     Left = 168
@@ -69,7 +69,7 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '
-    TabOrder = 2
+    TabOrder = 4
     OnClick = CheckBtnClick
   end
   object ListBox: TListBox
@@ -86,7 +86,7 @@ object Main: TMain
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 3
+    TabOrder = 0
     TabWidth = 100
     OnKeyUp = ListBoxKeyUp
     OnMouseDown = ListBoxMouseDown
@@ -97,7 +97,7 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1041#1088#1072#1085#1076#1084#1072#1091#1101#1088
-    TabOrder = 4
+    TabOrder = 5
     OnClick = FirewallBtnClick
   end
   object CloseBtn: TButton
@@ -106,10 +106,10 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1042#1099#1093#1086#1076
-    TabOrder = 5
+    TabOrder = 6
     OnClick = CloseBtnClick
   end
-  object Search: TEdit
+  object SearchEdt: TEdit
     Left = 8
     Top = 246
     Width = 393
@@ -120,10 +120,10 @@ object Main: TMain
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 6
+    TabOrder = 1
     Text = #1055#1086#1080#1089#1082'...'
-    OnChange = SearchChange
-    OnMouseDown = SearchMouseDown
+    OnChange = SearchEdtChange
+    OnMouseDown = SearchEdtMouseDown
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -135,15 +135,8 @@ object Main: TMain
     OnClick = StatusBarClick
   end
   object OpenDialog: TOpenDialog
-    Filter = #1055#1088#1080#1083#1086#1078#1077#1085#1080#1077' (.exe) '#1080' '#1073#1080#1073#1083#1080#1086#1090#1077#1082#1080' (.dll)|*.exe;*.dll'
+    Filter = '|*.exe'
     Left = 16
     Top = 32
-  end
-  object PopupMenu: TPopupMenu
-    Left = 48
-    Top = 32
-    object N1: TMenuItem
-      Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1092#1072#1081#1083#1072
-    end
   end
 end

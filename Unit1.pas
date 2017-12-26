@@ -4,25 +4,23 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComObj, ShellAPI, ComCtrls, ExtCtrls, Menus, Registry;
+  Dialogs, StdCtrls, ComObj, ShellAPI, ComCtrls, ExtCtrls, Menus, Registry, IniFiles;
 
 type
   TMain = class(TForm)
     AddBtn: TButton;
-    RemoveBtn: TButton;
+    RemBtn: TButton;
     CheckBtn: TButton;
     ListBox: TListBox;
     FirewallBtn: TButton;
     CloseBtn: TButton;
     OpenDialog: TOpenDialog;
-    NameLabel: TLabel;
-    PathLabel: TLabel;
-    PopupMenu: TPopupMenu;
-    N1: TMenuItem;
-    Search: TEdit;
+    NameAppLbl: TLabel;
+    AppPathLbl: TLabel;
+    SearchEdt: TEdit;
     StatusBar: TStatusBar;
     procedure AddBtnClick(Sender: TObject);
-    procedure RemoveBtnClick(Sender: TObject);
+    procedure RemBtnClick(Sender: TObject);
     procedure FirewallBtnClick(Sender: TObject);
     procedure CloseBtnClick(Sender: TObject);
     procedure StatusBarClick(Sender: TObject);
@@ -31,11 +29,9 @@ type
     procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure CheckBtnClick(Sender: TObject);
-    procedure Edit1KeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure SearchMouseDown(Sender: TObject; Button: TMouseButton;
+    procedure SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure SearchChange(Sender: TObject);
+    procedure SearchEdtChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure ListBoxKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -55,12 +51,21 @@ var
   CloseDuplicate: boolean;
   CountBlock: integer;
 
+  //Перевод / Tranlate
+  ID_SEARCH: string;
+
+  ID_ABOUT_TITLE, ID_LAST_UPDATE: string;
+
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED,
+  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES,
+  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND: string;
+
 implementation
 
 {$R *.dfm}
 {$R UAC.res}
 
-procedure RemoveFromFirewall(const RuleName:string);
+procedure RemoveFromFirewall(const RuleName: string);
 const
   NET_FW_PROFILE2_DOMAIN=1;
   NET_FW_PROFILE2_PRIVATE=2;
@@ -76,7 +81,7 @@ begin
   RObject.Remove(RuleName);
 end;
 
-procedure AddToFirewall(Const Caption, Executable: String;Direct:boolean);
+procedure AddToFirewall(const Caption, Executable: string; BlockIn: boolean);
 const
   NET_FW_PROFILE2_DOMAIN=1;
   NET_FW_PROFILE2_PRIVATE=2;
@@ -106,7 +111,7 @@ begin
   NewRule.Applicationname:= Executable;
   NewRule.Protocol:=NET_FW_IP_PROTOCOL_TCP; //Протоколы
   //NewRule.LocalPorts:=Port; Если порт, dword
-  if Direct then
+  if BlockIn then
     NewRule.Direction:=NET_FW_RULE_DIR_IN //OUT - исходящие, IN - входящие
   else NewRule.Direction:=NET_FW_RULE_DIR_OUT;
   NewRule.Enabled:=true;
@@ -118,8 +123,8 @@ end;
 
 function CutName(Name: string; Count: integer):string;
 begin
-  if Length(name) > Count then
-    Result:=Copy(Name, 1, Count-3) + '...'
+  if Length(Name) > Count then
+    Result:=Copy(Name, 1, Count - 3) + '...'
   else
     Result:=Name;
 end;
@@ -127,31 +132,31 @@ end;
 procedure TMain.AddBtnClick(Sender: TObject);
 begin
   if OpenDialog.Execute then
-    if Pos(OpenDialog.FileName,RulePaths.Text) = 0 then begin
+    if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
       RuleNames.Add(ExtractFileName(OpenDialog.FileName) + ' ' +DateToStr(Date) + ' ' + TimeToStr(Time));
       RulePaths.Add(OpenDialog.FileName);
-      AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], true);
-      AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], false);
-      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
-      StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(OpenDialog.FileName), 23) + '" успешно создано';
-    end else StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(OpenDialog.FileName), 24) + '" уже существует';
+      AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
+      AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
+      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
+      StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutName(ExtractFileName(OpenDialog.FileName), 22)]);
+    end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutName(ExtractFileName(OpenDialog.FileName), 23)]);
 end;
 
-procedure TMain.RemoveBtnClick(Sender: TObject);
+procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListBox.ItemIndex <> - 1 then begin
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
-    StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22) + '" успешно удалено';
+    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutName(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
     RuleNames.Delete(ListBox.ItemIndex);
     RulePaths.Delete(ListBox.ItemIndex);
     ListBox.Items.Delete(ListBox.ItemIndex);
-  end else StatusBar.SimpleText:=' Выберите правило';
+  end else StatusBar.SimpleText:=' ' + ID_CHOOSE_RULE;
 end;
 
 procedure TMain.FirewallBtnClick(Sender: TObject);
 begin
-  ShellExecute(0,'open','WF.msc',nil,nil,SW_ShowNormal);
+  ShellExecute(0, 'open', 'WF.msc', nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure TMain.CloseBtnClick(Sender: TObject);
@@ -170,28 +175,33 @@ begin
   for i:=0 to Amount-1 do begin
    Size:=DragQueryFile(Msg.WParam, i, nil, 0) + 1;
    Filename:=StrAlloc(Size);
-    DragQueryFile(Msg.WParam, i, Filename, size);
+    DragQueryFile(Msg.WParam, i, Filename, Size);
     Path:=StrPas(Filename);
     StrDispose(Filename);
-    if AnsiLowerCase(ExtractFileExt(path)) = '.exe' then
+    if AnsiLowerCase(ExtractFileExt(Path)) = '.exe' then
       if FileExists(Path) then
-        if pos(Path,RulePaths.Text)=0 then begin
+        if Pos(Path, RulePaths.Text) = 0 then begin
           inc(c);
           RuleNames.Add(ExtractFileName(Path) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
           RulePaths.Add(Path);
-          AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], true);
-          AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], false);
-          ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
+          AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
+          AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
+          ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
         end;
   end;
   DragFinish(Msg.WParam);
-  if c > 0 then StatusBar.SimpleText:=' Правил успешно создано : '+IntToStr(c);
-  if c = 0 then StatusBar.SimpleText:=' Не удалось создать правила';
+  if c > 0 then
+    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(c)
+  else
+    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES;
 end;
 
 procedure TMain.StatusBarClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption+' 0.5.1 beta' + #13#10 + 'Последнее обновление: 21.06.2017' + #13#10 + 'https://r57zone.github.io' + #13#10 + 'r57zone@gmail.com'), 'О программе...', 0);
+  Application.MessageBox(PChar(Caption + ' 0.6' + #13#10 +
+  ID_LAST_UPDATE + ' 26.12.2017' + #13#10 +
+  'https://r57zone.github.io' + #13#10 +
+  'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
 
 procedure TMain.LoadRegRules;
@@ -218,8 +228,8 @@ begin
       Delete(RegName, 1, pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
-      RuleNames.Add(Copy(RegName, 1, Pos('|', RegName) -1));
-      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
+      RuleNames.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
+      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
     end;
   end;
   Reg.CloseKey;
@@ -232,15 +242,55 @@ var
   CDS: TCopyDataStruct;
 begin
   CDS.dwData:=0;
-  CDS.cbData:=(Length(MsgToHandle)+1)*Sizeof(char);
+  CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
   CDS.lpData:=PChar(MsgToHandle);
   SendMessage(TRGWND,WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
+function GetLocaleInformation(Flag: Integer): string;
+var
+  pcLCA: array [0..20] of Char;
+begin
+  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, Flag, pcLCA, 19) <= 0 then
+    pcLCA[0]:=#0;
+  Result:=pcLCA;
+end;
+
 procedure TMain.FormCreate(Sender: TObject);
 var
-  WND: HWND;
+  WND: HWND; Ini: TIniFile;
 begin
+  //Перевод / Translate
+  if FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
+    Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini')
+  else
+    Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\English.ini');
+
+  NameAppLbl.Caption:=Ini.ReadString('Main', 'ID_APP_NAME', '');
+  AppPathLbl.Caption:=Ini.ReadString('Main', 'ID_APP_PATH', '');
+
+  ID_SEARCH:=Ini.ReadString('Main', 'ID_SEARCH', '');
+  SearchEdt.Text:=ID_SEARCH;
+
+  AddBtn.Caption:=Ini.ReadString('Main', 'ID_ADD', '');
+  OpenDialog.Filter:=Ini.ReadString('Main', 'ID_ADD_FILTER_NAME', '') + OpenDialog.Filter;
+  RemBtn.Caption:=Ini.ReadString('Main', 'ID_REMOVE', '');
+  CheckBtn.Caption:=Ini.ReadString('Main', 'ID_CHECK', '');
+  FirewallBtn.Caption:=Ini.ReadString('Main', 'ID_FIREWALL', '');
+  CloseBtn.Caption:=Ini.ReadString('Main', 'ID_EXIT', '');
+
+  ID_RULE_SUCCESSFULLY_CREATED:=Ini.ReadString('Main', 'ID_RULE_SUCCESSFULLY_CREATED', '');
+  ID_RULE_ALREADY_EXISTS:=Ini.ReadString('Main', 'ID_RULE_ALREADY_EXISTS', '');
+  ID_RULE_SUCCESSFULLY_REMOVED:=Ini.ReadString('Main', 'ID_RULE_SUCCESSFULLY_REMOVED', '');
+  ID_CHOOSE_RULE:=Ini.ReadString('Main', 'ID_CHOOSE_RULE', '');
+  ID_RULES_SUCCESSFULLY_CREATED:=Ini.ReadString('Main', 'ID_RULES_SUCCESSFULLY_CREATED', '');
+  ID_FAILED_CREATE_RULES:=Ini.ReadString('Main', 'ID_FAILED_CREATE_RULES', '');
+  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=Ini.ReadString('Main', 'ID_REMOVED_RULES_FOR_NONEXISTENT_APPS', '');
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=Ini.ReadString('Main', 'ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', '');
+
+  ID_ABOUT_TITLE:=Ini.ReadString('Main', 'ID_ABOUT_TITLE', '');
+  ID_LAST_UPDATE:=Ini.ReadString('Main', 'ID_LAST_UPDATE', '');
+
   DragAcceptFiles(Handle, True);
   RuleNames:=TStringList.Create;
   RulePaths:=TStringList.Create;
@@ -253,18 +303,18 @@ begin
       if Pos(ParamStr(1),RulePaths.Text) = 0 then begin
         RuleNames.Add(ExtractFileName(ParamStr(1)) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
         RulePaths.Add(ParamStr(1));
-        AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], true);
-        AddToFirewall(RuleNames.Strings[RuleNames.Count-1], RulePaths.Strings[RulePaths.Count-1], false);
-        ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count-1]),23) + ^I + CutName(RulePaths.Strings[RulePaths.Count-1], 38));
-        StatusBar.SimpleText:=' Правило для приложения "' + CutName(ExtractFileName(ParamStr(1)),22)+'" успешно создано';
+        AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
+        AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
+        ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
+        StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutName(ExtractFileName(ParamStr(1)), 22)]);
         inc(CountBlock);
         WND:=FindWindow('TMain', 'Firewall Easy');
         if WND <> 0 then begin
           CloseDuplicate:=true;
-          SendMessageToHandle(WND,'%ADDED%');
+          SendMessageToHandle(WND, '%ADDED%');
         end;
 
-      end else StatusBar.SimpleText:=' Не удалось создать правило для приложения "' + CutName(ExtractFileName(ParamStr(1)), 22) + '"';
+      end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutName(ExtractFileName(ParamStr(1)), 22)]);
     end;
 
   if CloseDuplicate = false then
@@ -289,8 +339,9 @@ begin
     ListBox.ItemIndex:=ListBox.ItemAtPos(P,true);
   end;
   if ListBox.ItemIndex <> -1 then begin
-    StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex], 63);
-    if Button=mbRight then ShellExecute(0, 'open', 'explorer', PChar('/select, '+RulePaths.Strings[ListBox.ItemIndex]), nil, SW_SHOW);
+    StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 62);
+    if Button = mbRight then
+      ShellExecute(0, 'open', 'explorer', PChar('/select, ' + RulePaths.Strings[ListBox.ItemIndex]), nil, SW_SHOW);
   end;
 end;
 
@@ -299,38 +350,39 @@ var
   i, c: integer;
 begin
   c:=0;
-  for i:=RulePaths.Count-1 downto 0 do
+  for i:=RulePaths.Count - 1 downto 0 do
     if not FileExists(RulePaths.Strings[i]) then begin
       RemoveFromFirewall(RuleNames.Strings[i]);
       RemoveFromFirewall(RuleNames.Strings[i]);
       RuleNames.Delete(i);
       RulePaths.Delete(i);
       ListBox.Items.Delete(i);
-      Inc(c);
+      inc(c);
     end;
-  if c <> 0 then StatusBar.SimpleText:=' Удалено правил для несуществующих приложений : '+IntToStr(c) else
-    StatusBar.SimpleText:=' Правил для несуществующих приложений не найдено';
+  if c <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' '+IntToStr(c) else
+    StatusBar.SimpleText:=' ' + ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND;
 end;
 
-procedure TMain.Edit1KeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  if Search.Text='Поиск...' then begin Search.Font.Color:=clBlack; Search.Clear; end;
-end;
-
-procedure TMain.SearchMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TMain.SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if Search.Text='Поиск...' then begin Search.Font.Color:=clBlack; Search.Clear; end;
+  if SearchEdt.Text=ID_SEARCH then begin
+    SearchEdt.Font.Color:=clBlack;
+    SearchEdt.Clear;
+  end;
 end;
 
-procedure TMain.SearchChange(Sender: TObject);
+procedure TMain.SearchEdtChange(Sender: TObject);
 var
-i: integer;
+  i: integer;
 begin
-  for i:=0 to RuleNames.Count-1 do
-    if Pos(AnsiLowerCase(Search.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then ListBox.Selected[i]:=true;
-  if ListBox.ItemIndex <> -1 then StatusBar.SimpleText:=' '+CutName(RulePaths.Strings[ListBox.ItemIndex],63);
+ if ListBox.Count > 0 then begin
+  for i:=0 to RuleNames.Count - 1 do
+      if Pos(AnsiLowerCase(SearchEdt.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then
+        ListBox.Selected[i]:=true;
+    if ListBox.ItemIndex <> -1 then
+      StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 63);
+  end;
 end;
 
 procedure TMain.FormShow(Sender: TObject);
@@ -342,15 +394,16 @@ end;
 procedure TMain.ListBoxKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if ListBox.ItemIndex <> -1 then StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 63);
+  if ListBox.ItemIndex <> -1 then
+    StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 62);
 end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
 begin
   if PChar(TWMCopyData(msg).CopyDataStruct.lpData) = '%ADDED%' then begin
-    inc(CountBlock);
+    Inc(CountBlock);
     LoadRegRules;
-    StatusBar.SimpleText:=' Правил успешно создано : '+IntToStr(CountBlock);
+    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(CountBlock);
   end;
   Msg.Result:=Integer(True);
 end;

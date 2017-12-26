@@ -1,18 +1,19 @@
-# Firewall Easy (Ru)
+[![RU](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)](https://github.com/r57zone/Firewall-Easy/blob/master/README.md) 
+[![EN](https://user-images.githubusercontent.com/9499881/33184537-7be87e86-d096-11e7-89bb-f3286f752bc6.png)](https://github.com/r57zone/PFirewall-Easy/blob/master/README.EN.md) 
+# Firewall Easy
 Приложение позволяет заблокировать доступ в интернет другим приложения, с помощью Брандмауэр Windows.
 
 ## Особенности
-
-✔ **Блокировка доступа в один клик**<br>
-Просто нажмите правой кнопкой мыши на программе (.exe), чтобы заблокировать ей доступ в интернет.<br>
-![1](https://cloud.githubusercontent.com/assets/9499881/7653228/22b33980-fb25-11e4-8f31-62982a1403e6.png)<br>
+- **Блокировка доступа в два клика**<br>
+Нажмите правой кнопкой мыши на программе, чтобы заблокировать ей доступ в интернет.<br>
+![](https://user-images.githubusercontent.com/9499881/34356405-d4bd3bc6-ea56-11e7-8ad9-cac90c2c278b.png)<br>
 Требуется исправить путь до программы в "AddContextMenu.reg" и выполнить его.
 
-✔ **Поддержка Drag and Drop**<br>
-Просто перенесите программы (.exe) в приложение и доступ в интернет им будет заблокирован.
+- **Поддержка Drag and Drop**<br>
+Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
 
-## Скриншоты
-![](https://user-images.githubusercontent.com/9499881/27404229-58500bd8-56de-11e7-9a5a-124ed9a97a68.png)
+## Скриншот
+![](https://user-images.githubusercontent.com/9499881/34356404-d49fb222-ea56-11e7-93c2-c29ff3ebf80e.png)
 
 ## Загрузка
 >Версия для 7, Windows 8.1, Windows 10.<br>
@@ -20,23 +21,3 @@
 
 ## Обратная связь
 `r57zone[собака]gmail.com`
-
-# Firewall Easy (En)
-Application allows you to block Internet access to other applications using the Windows Firewall.
-
-## Features
-
-✔ **Blocking access in a single click**<br>
-Simply right-click on the program (.exe), to block her access to the Internet.<br>
-Required to correct the path to the program in the "AddContextMenu.reg" and execute it.
-
-✔ **Support Drag and Drop**<br>
-Just move the program (.exe) in the application and Internet access to them will be blocked.
-
-## Download
->Version for Windows 7, Windows 8.1, Windows 10.<br>
->If you need a program with an English translation, please write to email and I'll will build it soon.<br>
-**[Download](https://github.com/r57zone/Firewall-Easy/releases)**<br>
-
-## Feedback
-`r57zone[at]gmail.com`
