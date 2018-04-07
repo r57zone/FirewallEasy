@@ -67,9 +67,9 @@ implementation
 
 procedure RemoveFromFirewall(const RuleName: string);
 const
-  NET_FW_PROFILE2_DOMAIN=1;
-  NET_FW_PROFILE2_PRIVATE=2;
-  NET_FW_PROFILE2_PUBLIC=4;
+  NET_FW_PROFILE2_DOMAIN = 1;
+  NET_FW_PROFILE2_PRIVATE = 2;
+  NET_FW_PROFILE2_PUBLIC = 4;
 var
   Profile: integer;
   Policy2: OleVariant;
@@ -81,21 +81,21 @@ begin
   RObject.Remove(RuleName);
 end;
 
-procedure AddToFirewall(const Caption, Executable: string; BlockIn: boolean);
+procedure AddToFirewall(const Caption, Executable: string; BlockTypeInOrOut: boolean);
 const
-  NET_FW_PROFILE2_DOMAIN=1;
-  NET_FW_PROFILE2_PRIVATE=2;
-  NET_FW_PROFILE2_PUBLIC=4;
+  NET_FW_PROFILE2_DOMAIN = 1;
+  NET_FW_PROFILE2_PRIVATE = 2;
+  NET_FW_PROFILE2_PUBLIC = 4;
 
-  NET_FW_IP_PROTOCOL_TCP=6;
-  NET_FW_IP_PROTOCOL_UDP=17;
-  NET_FW_IP_PROTOCOL_ICMPv4=1;
-  NET_FW_IP_PROTOCOL_ICMPv6=58;
+  NET_FW_IP_PROTOCOL_TCP = 6;
+  NET_FW_IP_PROTOCOL_UDP = 17;
+  NET_FW_IP_PROTOCOL_ICMPv4 = 1;
+  NET_FW_IP_PROTOCOL_ICMPv6 = 58;
 
-  NET_FW_ACTION_ALLOW=1;
-  NET_FW_RULE_DIR_IN=1;
-  NET_FW_RULE_DIR_OUT=2;
-  NET_FW_ACTION_BLOCK=0;
+  NET_FW_ACTION_ALLOW = 1;
+  NET_FW_RULE_DIR_IN = 1;
+  NET_FW_RULE_DIR_OUT = 2;
+  NET_FW_ACTION_BLOCK = 0;
 var
   fwPolicy2: OleVariant;
   RulesObject: OleVariant;
@@ -111,9 +111,10 @@ begin
   NewRule.Applicationname:= Executable;
   NewRule.Protocol:=NET_FW_IP_PROTOCOL_TCP; //Протоколы
   //NewRule.LocalPorts:=Port; Если порт, dword
-  if BlockIn then
+  if BlockTypeInOrOut then
     NewRule.Direction:=NET_FW_RULE_DIR_IN //OUT - исходящие, IN - входящие
-  else NewRule.Direction:=NET_FW_RULE_DIR_OUT;
+  else
+    NewRule.Direction:=NET_FW_RULE_DIR_OUT;
   NewRule.Enabled:=true;
   NewRule.Grouping:='FirewallEasy';
   NewRule.Profiles:=Profile;
@@ -121,7 +122,7 @@ begin
   RulesObject.Add(NewRule);
 end;
 
-function CutName(Name: string; Count: integer):string;
+function CutName(Name: string; Count: integer): string;
 begin
   if Length(Name) > Count then
     Result:=Copy(Name, 1, Count - 3) + '...'
@@ -198,8 +199,8 @@ end;
 
 procedure TMain.StatusBarClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.6' + #13#10 +
-  ID_LAST_UPDATE + ' 26.12.2017' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.6.1' + #13#10 +
+  ID_LAST_UPDATE + ' 07.04.2018' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
@@ -247,18 +248,18 @@ begin
   SendMessage(TRGWND,WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
-function GetLocaleInformation(Flag: Integer): string;
+function GetLocaleInformation(flag: integer): string;
 var
   pcLCA: array [0..20] of Char;
 begin
-  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, Flag, pcLCA, 19) <= 0 then
+  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, 19) <= 0 then
     pcLCA[0]:=#0;
   Result:=pcLCA;
 end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
-  WND: HWND; Ini: TIniFile;
+  WND: HWND; Ini: TIniFile; Reg: TRegistry;
 begin
   //Перевод / Translate
   if FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
@@ -296,6 +297,17 @@ begin
   RulePaths:=TStringList.Create;
 
   LoadRegRules;
+
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CLASSES_ROOT;
+  if (Reg.OpenKeyReadOnly('\exefile\shell\FirewallEasy') = false) and (Reg.OpenKey('\exefile\shell\FirewallEasy', true)) then begin
+    Reg.WriteString('', Ini.ReadString('Main', 'ID_BLOCK_ACCESS', ''));
+    Reg.WriteString('Icon', ParamStr(0));
+    Reg.OpenKey('\exefile\shell\FirewallEasy\command', true);
+    Reg.WriteString('', ParamStr(0) + ' "%1"');
+  end;
+  Reg.CloseKey;
+  Ini.Free;
 
   //Повторный запуск, передача ParamStr(1)
   if ParamCount > 0 then
