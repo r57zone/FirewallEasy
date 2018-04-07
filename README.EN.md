@@ -6,8 +6,7 @@ Application allows you to block Internet access to other applications using the 
 ## Features
 - **Blocking access in a single click**<br>
 ![](https://user-images.githubusercontent.com/9499881/34356520-d2cbf3ce-ea57-11e7-80e9-b78bb56c4173.png)<br>
-Right-click on the program to block her access to the Internet.<br>
-Required to correct the path to the program in the "AddContextMenu.reg" and execute it.
+Right-click on the program to block her access to the Internet.
 
 - **Support Drag and Drop**<br>
 Move the program to the "Firewall Easy" interface and access to the Internet will be blocked.
