@@ -223,7 +223,7 @@ begin
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
   Reg.OpenKeyReadOnly('SYSTEM\ControlSet001\services\SharedAccess\Parameters\FirewallPolicy\FirewallRules');
   Reg.GetValueNames(Rules);
-  for i:=0 to Rules.Count-1 do begin
+  for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
     if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) then begin
       Delete(RegName, 1, pos('App=', RegName) + 3);
@@ -307,6 +307,7 @@ begin
     Reg.WriteString('', ParamStr(0) + ' "%1"');
   end;
   Reg.CloseKey;
+  Reg.Free;
   Ini.Free;
 
   //Повторный запуск, передача ParamStr(1)
