@@ -12,7 +12,7 @@
 Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
 
 ## Скриншот
-![](https://user-images.githubusercontent.com/9499881/34356404-d49fb222-ea56-11e7-93c2-c29ff3ebf80e.png)
+![](https://user-images.githubusercontent.com/9499881/42877845-0a2a504c-8a9c-11e8-9ed9-2828e4aca447.png)
 
 ## Загрузка
 >Версия для 7, Windows 8.1, Windows 10.<br>

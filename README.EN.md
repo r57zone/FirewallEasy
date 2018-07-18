@@ -12,7 +12,7 @@ Right-click on the program to block her access to the Internet.
 Move the program to the "Firewall Easy" interface and access to the Internet will be blocked.
 
 ## Screenshot
-![](https://user-images.githubusercontent.com/9499881/34356519-d2af5516-ea57-11e7-86c6-36d39f77a0dc.png)
+![](https://user-images.githubusercontent.com/9499881/42877820-fc9a0698-8a9b-11e8-970d-1e4410533048.png)
 
 ## Download
 >Version for Windows 7, Windows 8.1, Windows 10.<br>

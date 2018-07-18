@@ -81,7 +81,7 @@ begin
   RObject.Remove(RuleName);
 end;
 
-procedure AddToFirewall(const Caption, Executable: string; BlockTypeInOrOut: boolean);
+procedure AddToFirewall(const Caption, Executable: string; BlockType: boolean);
 const
   NET_FW_PROFILE2_DOMAIN = 1;
   NET_FW_PROFILE2_PRIVATE = 2;
@@ -111,8 +111,8 @@ begin
   NewRule.Applicationname:= Executable;
   NewRule.Protocol:=NET_FW_IP_PROTOCOL_TCP; //Протоколы
   //NewRule.LocalPorts:=Port; Если порт, dword
-  if BlockTypeInOrOut then
-    NewRule.Direction:=NET_FW_RULE_DIR_IN //OUT - исходящие, IN - входящие
+  if BlockType then
+    NewRule.Direction:=NET_FW_RULE_DIR_IN //IN - входящие, OUT - исходящие
   else
     NewRule.Direction:=NET_FW_RULE_DIR_OUT;
   NewRule.Enabled:=true;
@@ -122,12 +122,12 @@ begin
   RulesObject.Add(NewRule);
 end;
 
-function CutName(Name: string; Count: integer): string;
+function CutStr(Str: string; CharCount: integer): string;
 begin
-  if Length(Name) > Count then
-    Result:=Copy(Name, 1, Count - 3) + '...'
+  if Length(Str) > CharCount then
+    Result:=Copy(Str, 1, CharCount - 3) + '...'
   else
-    Result:=Name;
+    Result:=Str;
 end;
 
 procedure TMain.AddBtnClick(Sender: TObject);
@@ -138,9 +138,9 @@ begin
       RulePaths.Add(OpenDialog.FileName);
       AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
       AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
-      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
-      StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutName(ExtractFileName(OpenDialog.FileName), 22)]);
-    end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutName(ExtractFileName(OpenDialog.FileName), 23)]);
+      ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
+      StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
+    end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
 end;
 
 procedure TMain.RemBtnClick(Sender: TObject);
@@ -148,7 +148,7 @@ begin
   if ListBox.ItemIndex <> - 1 then begin
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutName(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
+    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
     RuleNames.Delete(ListBox.ItemIndex);
     RulePaths.Delete(ListBox.ItemIndex);
     ListBox.Items.Delete(ListBox.ItemIndex);
@@ -173,7 +173,7 @@ begin
   inherited;
   Amount:=DragQueryFile(Msg.WParam, $FFFFFFFF, Filename, 255);
   c:=0;
-  for i:=0 to Amount-1 do begin
+  for i:=0 to Amount - 1 do begin
    Size:=DragQueryFile(Msg.WParam, i, nil, 0) + 1;
    Filename:=StrAlloc(Size);
     DragQueryFile(Msg.WParam, i, Filename, Size);
@@ -187,7 +187,7 @@ begin
           RulePaths.Add(Path);
           AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
           AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
-          ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
+          ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
         end;
   end;
   DragFinish(Msg.WParam);
@@ -199,8 +199,8 @@ end;
 
 procedure TMain.StatusBarClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.6.1' + #13#10 +
-  ID_LAST_UPDATE + ' 07.04.2018' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.6.2' + #13#10 +
+  ID_LAST_UPDATE + ' 18.07.2018' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
@@ -230,7 +230,7 @@ begin
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
       RuleNames.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
-      ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
+      ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
     end;
   end;
   Reg.CloseKey;
@@ -238,7 +238,7 @@ begin
   Reg.Free;
 end;
 
-procedure SendMessageToHandle(TRGWND:hWnd; MsgToHandle: string);
+procedure SendMessageToHandle(TRGWND: hWnd; MsgToHandle: string);
 var
   CDS: TCopyDataStruct;
 begin
@@ -313,13 +313,13 @@ begin
   //Повторный запуск, передача ParamStr(1)
   if ParamCount > 0 then
     if AnsiLowerCase(ExtractFileExt(ParamStr(1))) = '.exe' then begin
-      if Pos(ParamStr(1),RulePaths.Text) = 0 then begin
+      if Pos(ParamStr(1), RulePaths.Text) = 0 then begin
         RuleNames.Add(ExtractFileName(ParamStr(1)) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
         RulePaths.Add(ParamStr(1));
         AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
         AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
-        ListBox.Items.Add(CutName(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutName(RulePaths.Strings[RulePaths.Count - 1], 38));
-        StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutName(ExtractFileName(ParamStr(1)), 22)]);
+        ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
+        StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
         inc(CountBlock);
         WND:=FindWindow('TMain', 'Firewall Easy');
         if WND <> 0 then begin
@@ -327,7 +327,7 @@ begin
           SendMessageToHandle(WND, '%ADDED%');
         end;
 
-      end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutName(ExtractFileName(ParamStr(1)), 22)]);
+      end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
     end;
 
   if CloseDuplicate = false then
@@ -349,12 +349,12 @@ begin
   if Button = mbRight then begin
     P.X:=X;
     P.Y:=Y;
-    ListBox.ItemIndex:=ListBox.ItemAtPos(P,true);
+    ListBox.ItemIndex:=ListBox.ItemAtPos(P, true);
   end;
   if ListBox.ItemIndex <> -1 then begin
-    StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 62);
+    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
     if Button = mbRight then
-      ShellExecute(0, 'open', 'explorer', PChar('/select, ' + RulePaths.Strings[ListBox.ItemIndex]), nil, SW_SHOW);
+      ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
   end;
 end;
 
@@ -379,7 +379,7 @@ end;
 procedure TMain.SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if SearchEdt.Text=ID_SEARCH then begin
+  if SearchEdt.Text = ID_SEARCH then begin
     SearchEdt.Font.Color:=clBlack;
     SearchEdt.Clear;
   end;
@@ -394,7 +394,7 @@ begin
       if Pos(AnsiLowerCase(SearchEdt.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then
         ListBox.Selected[i]:=true;
     if ListBox.ItemIndex <> -1 then
-      StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 63);
+      StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 63);
   end;
 end;
 
@@ -408,7 +408,7 @@ procedure TMain.ListBoxKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if ListBox.ItemIndex <> -1 then
-    StatusBar.SimpleText:=' ' + CutName(RulePaths.Strings[ListBox.ItemIndex], 62);
+    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
 end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
