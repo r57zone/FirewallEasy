@@ -148,7 +148,7 @@ begin
   if ListBox.ItemIndex <> - 1 then begin
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
     RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
+    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
     RuleNames.Delete(ListBox.ItemIndex);
     RulePaths.Delete(ListBox.ItemIndex);
     ListBox.Items.Delete(ListBox.ItemIndex);
@@ -200,7 +200,7 @@ end;
 procedure TMain.StatusBarClick(Sender: TObject);
 begin
   Application.MessageBox(PChar(Caption + ' 0.6.2' + #13#10 +
-  ID_LAST_UPDATE + ' 18.07.2018' + #13#10 +
+  ID_LAST_UPDATE + ' 23.09.2018' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
@@ -226,7 +226,7 @@ begin
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
     if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) then begin
-      Delete(RegName, 1, pos('App=', RegName) + 3);
+      Delete(RegName, 1, Pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
       RuleNames.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
@@ -238,14 +238,14 @@ begin
   Reg.Free;
 end;
 
-procedure SendMessageToHandle(TRGWND: hWnd; MsgToHandle: string);
+procedure SendMessageToHandle(TrgWnd: hWnd; MsgToHandle: string);
 var
   CDS: TCopyDataStruct;
 begin
   CDS.dwData:=0;
   CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
   CDS.lpData:=PChar(MsgToHandle);
-  SendMessage(TRGWND,WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
+  SendMessage(TrgWnd,WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
 function GetLocaleInformation(flag: integer): string;
