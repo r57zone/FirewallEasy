@@ -1,22 +1,21 @@
 [![EN](https://user-images.githubusercontent.com/9499881/33184537-7be87e86-d096-11e7-89bb-f3286f752bc6.png)](https://github.com/r57zone/Firewall-Easy/blob/master/README.md) 
 [![RU](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)](https://github.com/r57zone/Firewall-Easy/blob/master/README.RU.md) 
 # Firewall Easy
-Приложение позволяет заблокировать доступ в интернет другим приложения, с помощью Брандмауэр Windows.
+Application allows you to block Internet access to other applications using the Windows Firewall.
 
-## Особенности
-- **Блокировка доступа в два клика**<br>
-![](https://user-images.githubusercontent.com/9499881/34356405-d4bd3bc6-ea56-11e7-8ad9-cac90c2c278b.png)<br>
-Нажмите правой кнопкой мыши на программе, чтобы заблокировать ей доступ в интернет.
+## Features
+- **Blocking access in a single click**<br>
+![](https://user-images.githubusercontent.com/9499881/34356520-d2cbf3ce-ea57-11e7-80e9-b78bb56c4173.png)<br>
+Right-click on the program to block her access to the Internet.
 
-- **Поддержка Drag and Drop**<br>
-Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
+- **Support Drag and Drop**<br>
+Move the program to the "Firewall Easy" interface and access to the Internet will be blocked.
 
-## Скриншот
-![](https://user-images.githubusercontent.com/9499881/42877845-0a2a504c-8a9c-11e8-9ed9-2828e4aca447.png)
+## Screenshot
+![](https://user-images.githubusercontent.com/9499881/42877820-fc9a0698-8a9b-11e8-970d-1e4410533048.png)
 
-## Загрузка
->Версия для 7, Windows 8.1, Windows 10.<br>
-**[Загрузить](https://github.com/r57zone/Firewall-Easy/releases)**<br>
-
-## Обратная связь
-`r57zone[собака]gmail.com`
+## Download
+>Version for Windows 7, Windows 8.1, Windows 10.<br>
+**[Download](https://github.com/r57zone/Firewall-Easy/releases)**<br>
+## Feedback
+`r57zone[at]gmail.com`
