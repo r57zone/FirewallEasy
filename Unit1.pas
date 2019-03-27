@@ -60,10 +60,59 @@ var
   ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES,
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND: string;
 
+const
+  NET_FW_IP_PROTOCOL_TCP = 6;
+  NET_FW_IP_PROTOCOL_UDP = 17;
+
+  NET_FW_RULE_DIR_IN = 1;   //IN - входящие соединения
+  NET_FW_RULE_DIR_OUT = 2;  //OUT - исходящие
+
 implementation
 
 {$R *.dfm}
 {$R UAC.res}
+
+procedure AddToFirewall(const Caption, Executable: string; NET_FW_IP_PROTOCOL, NET_FW_RULE_DIR: integer);
+const
+  NET_FW_PROFILE2_DOMAIN = 1;
+  NET_FW_PROFILE2_PRIVATE = 2;
+  NET_FW_PROFILE2_PUBLIC = 4;
+
+  NET_FW_IP_PROTOCOL_ICMPv4 = 1;
+  NET_FW_IP_PROTOCOL_ICMPv6 = 58;
+
+  NET_FW_ACTION_ALLOW = 1;
+  NET_FW_ACTION_BLOCK = 0;
+var
+  fwPolicy2: OleVariant;
+  RulesObject: OleVariant;
+  Profile: integer;
+  NewRule: OleVariant;
+begin
+  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; //Профили
+  fwPolicy2:=CreateOleObject('HNetCfg.FwPolicy2');
+  RulesObject:=fwPolicy2.Rules;
+  NewRule:=CreateOleObject('HNetCfg.FWRule');
+  NewRule.Name:=Caption;
+  NewRule.Description:=Caption;
+  NewRule.Applicationname:=Executable;
+  NewRule.Protocol:=NET_FW_IP_PROTOCOL; //Протоколы
+  //NewRule.LocalPorts:=Port; Если порт, dword
+  NewRule.Direction:=NET_FW_RULE_DIR; //Входящие и исходящие соединения
+  NewRule.Enabled:=true;
+  NewRule.Grouping:='FirewallEasy';
+  NewRule.Profiles:=Profile;
+  NewRule.Action:=NET_FW_ACTION_BLOCK; //NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
+  RulesObject.Add(NewRule);
+end;
+
+procedure AddAllRulesToFirewall(const Caption, Executable: string);
+begin
+  AddToFirewall(Caption + '_TCP_IN', Executable, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_IN);
+  AddToFirewall(Caption + '_TCP_OUT', Executable, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_OUT);
+  AddToFirewall(Caption + '_UDP_IN', Executable, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_IN);
+  AddToFirewall(Caption + '_UDP_OUT', Executable, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_OUT);
+end;
 
 procedure RemoveFromFirewall(const RuleName: string);
 const
@@ -81,45 +130,12 @@ begin
   RObject.Remove(RuleName);
 end;
 
-procedure AddToFirewall(const Caption, Executable: string; BlockType: boolean);
-const
-  NET_FW_PROFILE2_DOMAIN = 1;
-  NET_FW_PROFILE2_PRIVATE = 2;
-  NET_FW_PROFILE2_PUBLIC = 4;
-
-  NET_FW_IP_PROTOCOL_TCP = 6;
-  NET_FW_IP_PROTOCOL_UDP = 17;
-  NET_FW_IP_PROTOCOL_ICMPv4 = 1;
-  NET_FW_IP_PROTOCOL_ICMPv6 = 58;
-
-  NET_FW_ACTION_ALLOW = 1;
-  NET_FW_RULE_DIR_IN = 1;
-  NET_FW_RULE_DIR_OUT = 2;
-  NET_FW_ACTION_BLOCK = 0;
-var
-  fwPolicy2: OleVariant;
-  RulesObject: OleVariant;
-  Profile: integer;
-  NewRule: OleVariant;
+procedure RemoveRulesFromFirewall(const RuleName: string);
 begin
-  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; //Профили
-  fwPolicy2:=CreateOleObject('HNetCfg.FwPolicy2');
-  RulesObject:=fwPolicy2.Rules;
-  NewRule:=CreateOleObject('HNetCfg.FWRule');
-  NewRule.Name:=Caption;
-  NewRule.Description:=Caption;
-  NewRule.Applicationname:= Executable;
-  NewRule.Protocol:=NET_FW_IP_PROTOCOL_TCP; //Протоколы
-  //NewRule.LocalPorts:=Port; Если порт, dword
-  if BlockType then
-    NewRule.Direction:=NET_FW_RULE_DIR_IN //IN - входящие, OUT - исходящие
-  else
-    NewRule.Direction:=NET_FW_RULE_DIR_OUT;
-  NewRule.Enabled:=true;
-  NewRule.Grouping:='FirewallEasy';
-  NewRule.Profiles:=Profile;
-  NewRule.Action:=NET_FW_ACTION_BLOCK; //NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
-  RulesObject.Add(NewRule);
+  RemoveFromFirewall(RuleName + '_TCP_IN');
+  RemoveFromFirewall(RuleName + '_TCP_OUT');
+  RemoveFromFirewall(RuleName + '_UDP_IN');
+  RemoveFromFirewall(RuleName + '_UDP_OUT');
 end;
 
 function CutStr(Str: string; CharCount: integer): string;
@@ -134,10 +150,9 @@ procedure TMain.AddBtnClick(Sender: TObject);
 begin
   if OpenDialog.Execute then
     if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
-      RuleNames.Add(ExtractFileName(OpenDialog.FileName) + ' ' +DateToStr(Date) + ' ' + TimeToStr(Time));
+      RuleNames.Add(ExtractFileName(OpenDialog.FileName) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
       RulePaths.Add(OpenDialog.FileName);
-      AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
-      AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
+      AddAllRulesToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
       ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
       StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
     end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
@@ -146,8 +161,7 @@ end;
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListBox.ItemIndex <> - 1 then begin
-    RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
-    RemoveFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
+    RemoveRulesFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
     StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
     RuleNames.Delete(ListBox.ItemIndex);
     RulePaths.Delete(ListBox.ItemIndex);
@@ -185,8 +199,7 @@ begin
           inc(c);
           RuleNames.Add(ExtractFileName(Path) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
           RulePaths.Add(Path);
-          AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
-          AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
+          AddAllRulesToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
           ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
         end;
   end;
@@ -199,8 +212,8 @@ end;
 
 procedure TMain.StatusBarClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.6.2' + #13#10 +
-  ID_LAST_UPDATE + ' 23.09.2018' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.6.3' + #13#10 +
+  ID_LAST_UPDATE + ' 27.03.2019' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
@@ -225,7 +238,7 @@ begin
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
-    if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) then begin
+    if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
       Delete(RegName, 1, Pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
@@ -316,8 +329,7 @@ begin
       if Pos(ParamStr(1), RulePaths.Text) = 0 then begin
         RuleNames.Add(ExtractFileName(ParamStr(1)) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
         RulePaths.Add(ParamStr(1));
-        AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], true);
-        AddToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1], false);
+        AddAllRulesToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
         ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
         StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
         inc(CountBlock);
@@ -365,8 +377,7 @@ begin
   c:=0;
   for i:=RulePaths.Count - 1 downto 0 do
     if not FileExists(RulePaths.Strings[i]) then begin
-      RemoveFromFirewall(RuleNames.Strings[i]);
-      RemoveFromFirewall(RuleNames.Strings[i]);
+      RemoveRulesFromFirewall(RuleNames.Strings[i]);
       RuleNames.Delete(i);
       RulePaths.Delete(i);
       ListBox.Items.Delete(i);

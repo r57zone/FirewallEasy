@@ -4,19 +4,23 @@
 Приложение позволяет заблокировать доступ в интернет другим приложения, с помощью Брандмауэр Windows.
 
 ## Особенности
-- **Блокировка доступа в два клика**<br>
-![](https://user-images.githubusercontent.com/9499881/34356405-d4bd3bc6-ea56-11e7-8ad9-cac90c2c278b.png)<br>
+- **Блокировка доступа в два клика**
+
+![](https://user-images.githubusercontent.com/9499881/34356405-d4bd3bc6-ea56-11e7-8ad9-cac90c2c278b.png)
+
 Нажмите правой кнопкой мыши на программе, чтобы заблокировать ей доступ в интернет.
 
-- **Поддержка Drag and Drop**<br>
+- **Поддержка Drag and Drop**
+
 Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
 
 ## Скриншот
 ![](https://user-images.githubusercontent.com/9499881/42877845-0a2a504c-8a9c-11e8-9ed9-2828e4aca447.png)
 
 ## Загрузка
->Версия для 7, Windows 8.1, Windows 10.<br>
-**[Загрузить](https://github.com/r57zone/Firewall-Easy/releases)**<br>
+>Версия для 7, Windows 8.1, Windows 10.
+
+**[Загрузить](https://github.com/r57zone/Firewall-Easy/releases)**
 
 ## Обратная связь
 `r57zone[собака]gmail.com`
