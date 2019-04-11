@@ -253,14 +253,14 @@ begin
   Reg.Free;
 end;
 
-procedure SendMessageToHandle(TrgWnd: hWnd; MsgToHandle: string);
+procedure SendMessageToHandle(TrgWND: HWND; MsgToHandle: string);
 var
   CDS: TCopyDataStruct;
 begin
   CDS.dwData:=0;
   CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
   CDS.lpData:=PChar(MsgToHandle);
-  SendMessage(TrgWnd,WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
+  SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
 function GetLocaleInformation(flag: integer): string;
@@ -385,7 +385,7 @@ begin
       ListBox.Items.Delete(i);
       inc(c);
     end;
-  if c <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' '+IntToStr(c) else
+  if c <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(c) else
     StatusBar.SimpleText:=' ' + ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND;
 end;
 
@@ -420,8 +420,13 @@ end;
 procedure TMain.ListBoxKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if ListBox.ItemIndex <> -1 then
+  if ListBox.ItemIndex <> -1 then begin
     StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
+    if Key = VK_DELETE then
+      RemBtn.Click;
+    if Key = VK_RETURN then
+      ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
+  end;
 end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
