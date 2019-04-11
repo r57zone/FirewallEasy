@@ -16,7 +16,7 @@ Move the program to the "Firewall Easy" interface and access to the Internet wil
 ![](https://user-images.githubusercontent.com/9499881/42877820-fc9a0698-8a9b-11e8-970d-1e4410533048.png)
 
 ## Download
->Version for Windows 7, Windows 8.1, Windows 10.
+>Version for Windows 7, 8.1, 10.
 
 **[Download](https://github.com/r57zone/Firewall-Easy/releases)**
 ## Feedback
