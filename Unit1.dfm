@@ -5,7 +5,7 @@ object Main: TMain
   BorderStyle = bsSingle
   Caption = 'App'
   ClientHeight = 320
-  ClientWidth = 408
+  ClientWidth = 409
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
@@ -46,7 +46,7 @@ object Main: TMain
     ParentFont = False
   end
   object AddBtn: TButton
-    Left = 8
+    Left = 7
     Top = 271
     Width = 75
     Height = 25
@@ -55,7 +55,7 @@ object Main: TMain
     OnClick = AddBtnClick
   end
   object RemBtn: TButton
-    Left = 88
+    Left = 87
     Top = 271
     Width = 75
     Height = 25
@@ -64,7 +64,7 @@ object Main: TMain
     OnClick = RemBtnClick
   end
   object CheckBtn: TButton
-    Left = 168
+    Left = 167
     Top = 271
     Width = 75
     Height = 25
@@ -92,7 +92,7 @@ object Main: TMain
     OnMouseDown = ListBoxMouseDown
   end
   object FirewallBtn: TButton
-    Left = 248
+    Left = 247
     Top = 271
     Width = 75
     Height = 25
@@ -101,7 +101,7 @@ object Main: TMain
     OnClick = FirewallBtnClick
   end
   object CloseBtn: TButton
-    Left = 328
+    Left = 327
     Top = 271
     Width = 75
     Height = 25
@@ -128,7 +128,7 @@ object Main: TMain
   object StatusBar: TStatusBar
     Left = 0
     Top = 301
-    Width = 408
+    Width = 409
     Height = 19
     Panels = <>
     SimplePanel = True

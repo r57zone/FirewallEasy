@@ -106,7 +106,7 @@ begin
   RulesObject.Add(NewRule);
 end;
 
-procedure AddAllRulesToFirewall(const Caption, Executable: string);
+procedure AddRulesForApp(const Caption, Executable: string);
 begin
   AddToFirewall(Caption + '_TCP_IN', Executable, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_IN);
   AddToFirewall(Caption + '_TCP_OUT', Executable, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_OUT);
@@ -130,7 +130,7 @@ begin
   RObject.Remove(RuleName);
 end;
 
-procedure RemoveRulesFromFirewall(const RuleName: string);
+procedure RemoveAppRules(const RuleName: string);
 begin
   RemoveFromFirewall(RuleName + '_TCP_IN');
   RemoveFromFirewall(RuleName + '_TCP_OUT');
@@ -152,7 +152,7 @@ begin
     if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
       RuleNames.Add(ExtractFileName(OpenDialog.FileName) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
       RulePaths.Add(OpenDialog.FileName);
-      AddAllRulesToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
+      AddRulesForApp(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
       ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
       StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
     end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
@@ -161,7 +161,7 @@ end;
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListBox.ItemIndex <> - 1 then begin
-    RemoveRulesFromFirewall(RuleNames.Strings[ListBox.ItemIndex]);
+    RemoveAppRules(RuleNames.Strings[ListBox.ItemIndex]);
     StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]);
     RuleNames.Delete(ListBox.ItemIndex);
     RulePaths.Delete(ListBox.ItemIndex);
@@ -199,7 +199,7 @@ begin
           inc(c);
           RuleNames.Add(ExtractFileName(Path) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
           RulePaths.Add(Path);
-          AddAllRulesToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
+          AddRulesForApp(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
           ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
         end;
   end;
@@ -212,8 +212,8 @@ end;
 
 procedure TMain.StatusBarClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.6.3' + #13#10 +
-  ID_LAST_UPDATE + ' 27.03.2019' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.6.4' + #13#10 +
+  ID_LAST_UPDATE + ' 11.04.2019' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
@@ -242,7 +242,9 @@ begin
       Delete(RegName, 1, Pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
-      RuleNames.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
+      RegName:=Copy(RegName, 1, Pos('|', RegName) - 1);
+      RegName:=Copy(RegName, 1, Pos('_UDP_', RegName) - 1);
+      RuleNames.Add(RegName);
       ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
     end;
   end;
@@ -329,7 +331,7 @@ begin
       if Pos(ParamStr(1), RulePaths.Text) = 0 then begin
         RuleNames.Add(ExtractFileName(ParamStr(1)) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time));
         RulePaths.Add(ParamStr(1));
-        AddAllRulesToFirewall(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
+        AddRulesForApp(RuleNames.Strings[RuleNames.Count - 1], RulePaths.Strings[RulePaths.Count - 1]);
         ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
         StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
         inc(CountBlock);
@@ -377,7 +379,7 @@ begin
   c:=0;
   for i:=RulePaths.Count - 1 downto 0 do
     if not FileExists(RulePaths.Strings[i]) then begin
-      RemoveRulesFromFirewall(RuleNames.Strings[i]);
+      RemoveAppRules(RuleNames.Strings[i]);
       RuleNames.Delete(i);
       RulePaths.Delete(i);
       ListBox.Items.Delete(i);
