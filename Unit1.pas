@@ -35,6 +35,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure ListBoxKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure SearchEdtKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   protected
     procedure WMDropFiles (var Msg: TMessage); message wm_DropFiles;
   private
@@ -357,14 +359,10 @@ end;
 
 procedure TMain.ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
-var
-  P: TPoint;
 begin
-  if Button = mbRight then begin
-    P.X:=X;
-    P.Y:=Y;
-    ListBox.ItemIndex:=ListBox.ItemAtPos(P, true);
-  end;
+  if Button = mbRight then
+    ListBox.ItemIndex:=ListBox.ItemAtPos(Point(X, Y), true);
+
   if ListBox.ItemIndex <> -1 then begin
     StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
     if Button = mbRight then
@@ -374,18 +372,18 @@ end;
 
 procedure TMain.CheckBtnClick(Sender: TObject);
 var
-  i, c: integer;
+  i, CountRemovedRules: integer;
 begin
-  c:=0;
+  CountRemovedRules:=0;
   for i:=RulePaths.Count - 1 downto 0 do
     if not FileExists(RulePaths.Strings[i]) then begin
       RemoveAppRules(RuleNames.Strings[i]);
       RuleNames.Delete(i);
       RulePaths.Delete(i);
       ListBox.Items.Delete(i);
-      inc(c);
+      Inc(CountRemovedRules);
     end;
-  if c <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(c) else
+  if CountRemovedRules <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(CountRemovedRules) else
     StatusBar.SimpleText:=' ' + ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND;
 end;
 
@@ -437,6 +435,14 @@ begin
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(CountBlock);
   end;
   Msg.Result:=Integer(True);
+end;
+
+procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  //Убираем баг скрытия контролов
+  if Key = VK_MENU then
+    Key:=0;
 end;
 
 end.
