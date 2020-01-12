@@ -16,6 +16,7 @@ object Main: TMain
   Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -85,9 +86,12 @@ object Main: TMain
     ItemHeight = 13
     ParentFont = False
     ParentShowHint = False
+    PopupMenu = PopupMenu
     ShowHint = True
     TabOrder = 0
     TabWidth = 100
+    OnDblClick = ListBoxDblClick
+    OnKeyDown = ListBoxKeyDown
     OnKeyUp = ListBoxKeyUp
     OnMouseDown = ListBoxMouseDown
   end
@@ -123,6 +127,8 @@ object Main: TMain
     TabOrder = 1
     Text = #1055#1086#1080#1089#1082'...'
     OnChange = SearchEdtChange
+    OnKeyDown = SearchEdtKeyDown
+    OnKeyUp = SearchEdtKeyUp
     OnMouseDown = SearchEdtMouseDown
   end
   object StatusBar: TStatusBar
@@ -137,6 +143,29 @@ object Main: TMain
   object OpenDialog: TOpenDialog
     Filter = '|*.exe'
     Left = 16
+    Top = 32
+  end
+  object PopupMenu: TPopupMenu
+    Left = 48
+    Top = 32
+    object ImportBtn: TMenuItem
+      Caption = #1048#1084#1087#1086#1088#1090
+      OnClick = ImportBtnClick
+    end
+    object ExportBtn: TMenuItem
+      Caption = #1069#1082#1089#1087#1086#1088#1090
+      OnClick = ExportBtnClick
+    end
+  end
+  object ImportDialog: TOpenDialog
+    Filter = 'Firewall Easy|*.fer'
+    Left = 80
+    Top = 32
+  end
+  object ExportDialog: TSaveDialog
+    DefaultExt = 'Firewall Easy|*.fer'
+    Filter = 'Firewall Easy|*.fer'
+    Left = 112
     Top = 32
   end
 end
