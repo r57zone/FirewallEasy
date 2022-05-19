@@ -4,7 +4,7 @@ object Main: TMain
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'App'
-  ClientHeight = 320
+  ClientHeight = 323
   ClientWidth = 409
   Color = clBtnFace
   Font.Charset = RUSSIAN_CHARSET
@@ -12,6 +12,7 @@ object Main: TMain
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
+  Menu = MainMenu1
   OldCreateOrder = False
   Position = poScreenCenter
   OnClose = FormClose
@@ -86,7 +87,6 @@ object Main: TMain
     ItemHeight = 13
     ParentFont = False
     ParentShowHint = False
-    PopupMenu = PopupMenu
     ShowHint = True
     TabOrder = 0
     TabWidth = 100
@@ -133,29 +133,16 @@ object Main: TMain
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 301
+    Top = 304
     Width = 409
     Height = 19
     Panels = <>
     SimplePanel = True
-    OnClick = StatusBarClick
   end
   object OpenDialog: TOpenDialog
     Filter = '|*.exe'
-    Left = 16
-    Top = 32
-  end
-  object PopupMenu: TPopupMenu
     Left = 48
     Top = 32
-    object ImportBtn: TMenuItem
-      Caption = #1048#1084#1087#1086#1088#1090
-      OnClick = ImportBtnClick
-    end
-    object ExportBtn: TMenuItem
-      Caption = #1069#1082#1089#1087#1086#1088#1090
-      OnClick = ExportBtnClick
-    end
   end
   object ImportDialog: TOpenDialog
     Filter = 'Firewall Easy|*.fer'
@@ -167,5 +154,27 @@ object Main: TMain
     Filter = 'Firewall Easy|*.fer'
     Left = 112
     Top = 32
+  end
+  object MainMenu1: TMainMenu
+    Left = 16
+    Top = 32
+    object RulesItem: TMenuItem
+      Caption = #1055#1088#1072#1074#1080#1083#1072
+      object ImportBtn: TMenuItem
+        Caption = #1048#1084#1087#1086#1088#1090
+        OnClick = ImportBtnClick
+      end
+      object ExportBtn: TMenuItem
+        Caption = #1069#1082#1089#1087#1086#1088#1090
+        OnClick = ExportBtnClick
+      end
+    end
+    object HelpItem: TMenuItem
+      Caption = #1057#1087#1088#1072#1074#1082#1072
+      object AboutBtn: TMenuItem
+        Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077'...'
+        OnClick = AboutBtnClick
+      end
+    end
   end
 end

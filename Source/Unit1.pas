@@ -19,16 +19,18 @@ type
     AppPathLbl: TLabel;
     SearchEdt: TEdit;
     StatusBar: TStatusBar;
-    PopupMenu: TPopupMenu;
-    ImportBtn: TMenuItem;
-    ExportBtn: TMenuItem;
     ImportDialog: TOpenDialog;
     ExportDialog: TSaveDialog;
+    MainMenu1: TMainMenu;
+    RulesItem: TMenuItem;
+    ImportBtn: TMenuItem;
+    ExportBtn: TMenuItem;
+    HelpItem: TMenuItem;
+    AboutBtn: TMenuItem;
     procedure AddBtnClick(Sender: TObject);
     procedure RemBtnClick(Sender: TObject);
     procedure FirewallBtnClick(Sender: TObject);
     procedure CloseBtnClick(Sender: TObject);
-    procedure StatusBarClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure CheckBtnClick(Sender: TObject);
@@ -47,12 +49,13 @@ type
     procedure ListBoxDblClick(Sender: TObject);
     procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure ImportBtnClick(Sender: TObject);
-    procedure ExportBtnClick(Sender: TObject);
     procedure SearchEdtKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure ImportBtnClick(Sender: TObject);
+    procedure ExportBtnClick(Sender: TObject);
+    procedure AboutBtnClick(Sender: TObject);
   protected
-    procedure WMDropFiles (var Msg: TMessage); message wm_DropFiles;
+    procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
@@ -67,7 +70,7 @@ var
   CloseDuplicate: boolean;
   BlockedCount: integer;
 
-  //Перевод / Tranlate
+  // Перевод / Tranlate
   ID_SEARCH: string;
 
   ID_ABOUT_TITLE, ID_LAST_UPDATE: string;
@@ -80,8 +83,8 @@ const
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
 
-  NET_FW_RULE_DIR_IN = 1;   //IN - входящие соединения
-  NET_FW_RULE_DIR_OUT = 2;  //OUT - исходящие
+  NET_FW_RULE_DIR_IN = 1;   // IN - входящие соединения
+  NET_FW_RULE_DIR_OUT = 2;  // OUT - исходящие
 
 implementation
 
@@ -120,13 +123,13 @@ begin
   NewRule.Name:=Caption;
   NewRule.Description:=Caption;
   NewRule.Applicationname:=Executable;
-  NewRule.Protocol:=NET_FW_IP_PROTOCOL; //Протоколы
-  //NewRule.LocalPorts:=Port; Если порт, dword
-  NewRule.Direction:=NET_FW_RULE_DIR; //Входящие и исходящие соединения
+  NewRule.Protocol:=NET_FW_IP_PROTOCOL; // Протоколы
+  //NewRule.LocalPorts:=Port; // Если порт, dword
+  NewRule.Direction:=NET_FW_RULE_DIR; // Входящие и исходящие соединения
   NewRule.Enabled:=true;
   NewRule.Grouping:='FirewallEasy';
   NewRule.Profiles:=Profile;
-  NewRule.Action:=NET_FW_ACTION_BLOCK; //NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
+  NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
   RulesObject.Add(NewRule);
 end;
 
@@ -136,13 +139,13 @@ var
 begin
   RuleCaption:=ExtractFileName(FilePath) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time);
 
-  //Добавляем все правила в Firewall
+  // Добавляем все правила в Firewall
   AddRuleToFirewall(RuleCaption + '_TCP_IN', FilePath, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_IN);
   AddRuleToFirewall(RuleCaption + '_TCP_OUT', FilePath, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_OUT);
   AddRuleToFirewall(RuleCaption + '_UDP_IN', FilePath, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_IN);
   AddRuleToFirewall(RuleCaption + '_UDP_OUT', FilePath, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_OUT);
 
-  //Обновляем список, обновляем RuleNames, RulePaths
+  // Обновляем список, обновляем RuleNames, RulePaths
   Main.LoadRegRules;
 end;
 
@@ -169,17 +172,17 @@ begin
   RemoveRuleFromFirewall(RuleName + '_UDP_IN');
   RemoveRuleFromFirewall(RuleName + '_UDP_OUT');
 
-  //Обновляем список, обновляем RuleNames, RulePaths
+  // Обновляем список, обновляем RuleNames, RulePaths
   Main.LoadRegRules;
 end;
 
 procedure TMain.AddBtnClick(Sender: TObject);
 begin
-  if OpenDialog.Execute then
-    if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
-      AddRulesForApp(OpenDialog.FileName);
-      StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
-    end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
+  if not OpenDialog.Execute then Exit;
+  if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
+    AddRulesForApp(OpenDialog.FileName);
+    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
+  end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
 end;
 
 procedure TMain.RemBtnClick(Sender: TObject);
@@ -227,14 +230,6 @@ begin
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount)
   else
     StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES;
-end;
-
-procedure TMain.StatusBarClick(Sender: TObject);
-begin
-  Application.MessageBox(PChar(Caption + ' 0.6.5' + #13#10 +
-  ID_LAST_UPDATE + ' 12.01.2020' + #13#10 +
-  'https://r57zone.github.io' + #13#10 +
-  'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
 
 procedure TMain.LoadRegRules;
@@ -295,11 +290,19 @@ procedure TMain.FormCreate(Sender: TObject);
 var
   WND: HWND; Ini: TIniFile; Reg: TRegistry;
 begin
-  //Перевод / Translate
+  // Перевод / Translate
   if FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
     Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini')
   else
     Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\English.ini');
+
+  RulesItem.Caption:=Ini.ReadString('Main', 'ID_RULES', '');
+  ImportBtn.Caption:=Ini.ReadString('Main', 'ID_IMPORT', '');
+  ExportBtn.Caption:=Ini.ReadString('Main', 'ID_EXPORT', '');
+  HelpItem.Caption:=Ini.ReadString('Main', 'ID_HELP', '');
+  ID_ABOUT_TITLE:=Ini.ReadString('Main', 'ID_ABOUT_TITLE', '');
+  AboutBtn.Caption:=ID_ABOUT_TITLE;
+
 
   NameAppLbl.Caption:=Ini.ReadString('Main', 'ID_APP_NAME', '');
   AppPathLbl.Caption:=Ini.ReadString('Main', 'ID_APP_PATH', '');
@@ -314,9 +317,6 @@ begin
   FirewallBtn.Caption:=Ini.ReadString('Main', 'ID_FIREWALL', '');
   CloseBtn.Caption:=Ini.ReadString('Main', 'ID_EXIT', '');
 
-  ImportBtn.Caption:=Ini.ReadString('Main', 'ID_IMPORT', '');
-  ExportBtn.Caption:=Ini.ReadString('Main', 'ID_EXPORT', '');
-
   ID_RULE_SUCCESSFULLY_CREATED:=Ini.ReadString('Main', 'ID_RULE_SUCCESSFULLY_CREATED', '');
   ID_RULE_ALREADY_EXISTS:=Ini.ReadString('Main', 'ID_RULE_ALREADY_EXISTS', '');
   ID_RULE_SUCCESSFULLY_REMOVED:=Ini.ReadString('Main', 'ID_RULE_SUCCESSFULLY_REMOVED', '');
@@ -326,7 +326,6 @@ begin
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=Ini.ReadString('Main', 'ID_REMOVED_RULES_FOR_NONEXISTENT_APPS', '');
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=Ini.ReadString('Main', 'ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', '');
 
-  ID_ABOUT_TITLE:=Ini.ReadString('Main', 'ID_ABOUT_TITLE', '');
   ID_LAST_UPDATE:=Ini.ReadString('Main', 'ID_LAST_UPDATE', '');
 
   DragAcceptFiles(Handle, true);
@@ -347,7 +346,7 @@ begin
   Reg.Free;
   Ini.Free;
 
-  //Повторный запуск, передача ParamStr(1)
+  // Повторный запуск, передача ParamStr(1)
   if ParamCount > 0 then
     if AnsiLowerCase(ExtractFileExt(ParamStr(1))) = '.exe' then begin
       if Pos(ParamStr(1), RulePaths.Text) = 0 then begin
@@ -398,13 +397,12 @@ end;
 procedure TMain.ListBoxKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if ListBox.ItemIndex <> -1 then begin
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
-    if Key = VK_DELETE then
-      RemBtn.Click;
-    if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListBox.ItemIndex])) then
-      ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
-  end;
+  if ListBox.ItemIndex = -1 then Exit;
+  StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
+  if Key = VK_DELETE then
+    RemBtn.Click
+  else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListBox.ItemIndex])) then
+    ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
@@ -420,7 +418,7 @@ end;
 procedure TMain.ListBoxKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  //Убираем баг скрытия контролов
+  // Убираем баг скрытия контролов
   if Key = VK_MENU then
     Key:=0;
 end;
@@ -428,25 +426,81 @@ end;
 procedure TMain.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  //Убираем баг скрытия контролов
+  // Убираем баг скрытия контролов
   if Key = VK_MENU then
     Key:=0;
 end;
 
 procedure TMain.ListBoxDblClick(Sender: TObject);
 begin
-  if ListBox.ItemIndex <> -1 then begin
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
-    if FileExists(RulePaths.Strings[ListBox.ItemIndex]) then
-      ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
-  end;
+  if ListBox.ItemIndex = -1 then Exit;
+  if FileExists(RulePaths.Strings[ListBox.ItemIndex]) then
+    ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
 procedure TMain.ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  //Заносим в индекс выделенный элемент
+  // Сбрасываем индекс, если попадаем в пустую область
   ListBox.ItemIndex:=ListBox.ItemAtPos(Point(X, Y), true);
+
+  if ListBox.ItemIndex <> -1 then
+    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62)
+  else
+    StatusBar.SimpleText:=' ';
+
+  if SearchEdt.Text = '' then begin
+    SearchEdt.Font.Color:=clGray;
+    SearchEdt.Text:=ID_SEARCH;
+  end;
+end;
+
+procedure TMain.SearchEdtChange(Sender: TObject);
+var
+  i: integer;
+begin
+  if ListBox.Count = 0 then Exit;
+  ListBox.ItemIndex:=-1;
+  for i:=0 to RuleNames.Count - 1 do
+    if Pos(AnsiLowerCase(SearchEdt.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then begin
+      ListBox.ItemIndex:=i;
+      Break;
+    end;
+  if ListBox.ItemIndex <> -1 then
+    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 63)
+  else
+    StatusBar.SimpleText:=' ';
+end;
+
+procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // Убираем баг скрытия контролов
+  if Key = VK_MENU then
+    Key:=0;
+
+  if SearchEdt.Text = ID_SEARCH then begin
+    SearchEdt.Font.Color:=clBlack;
+    SearchEdt.Clear;
+  end;
+end;
+
+procedure TMain.SearchEdtKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if SearchEdt.Text = '' then begin
+    SearchEdt.Font.Color:=clGray;
+    SearchEdt.Text:=ID_SEARCH;
+  end;
+end;
+
+procedure TMain.SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if SearchEdt.Text = ID_SEARCH then begin
+    SearchEdt.Font.Color:=clBlack;
+    SearchEdt.Clear;
+  end;
 end;
 
 procedure TMain.ImportBtnClick(Sender: TObject);
@@ -477,48 +531,12 @@ begin
     RulePaths.SaveToFile(ExportDialog.FileName);
 end;
 
-procedure TMain.SearchEdtChange(Sender: TObject);
-var
-  i: integer;
+procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  if ListBox.Count > 0 then begin
-    for i:=0 to RuleNames.Count - 1 do
-      if Pos(AnsiLowerCase(SearchEdt.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then
-        ListBox.Selected[i]:=true;
-    if ListBox.ItemIndex <> -1 then
-      StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 63);
-  end;
-end;
-
-procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  //Убираем баг скрытия контролов
-  if Key = VK_MENU then
-    Key:=0;
-
-  if SearchEdt.Text = ID_SEARCH then begin
-    SearchEdt.Font.Color:=clBlack;
-    SearchEdt.Clear;
-  end;
-end;
-
-procedure TMain.SearchEdtKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  if Trim(SearchEdt.Text) = '' then begin
-    SearchEdt.Font.Color:=clGray;
-    SearchEdt.Text:=ID_SEARCH;
-  end;
-end;
-
-procedure TMain.SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  if SearchEdt.Text = ID_SEARCH then begin
-    SearchEdt.Font.Color:=clBlack;
-    SearchEdt.Clear;
-  end;
+  Application.MessageBox(PChar(Caption + ' 0.7' + #13#10 +
+  ID_LAST_UPDATE + ' 19.05.2022' + #13#10 +
+  'https://r57zone.github.io' + #13#10 +
+  'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
 end;
 
 end.
