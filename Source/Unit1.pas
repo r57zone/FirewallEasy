@@ -73,7 +73,7 @@ var
   // Перевод / Tranlate
   ID_SEARCH: string;
 
-  ID_ABOUT_TITLE, ID_LAST_UPDATE: string;
+  ID_ABOUT, ID_LAST_UPDATE: string;
 
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED,
   ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES,
@@ -300,8 +300,8 @@ begin
   ImportBtn.Caption:=Ini.ReadString('Main', 'ID_IMPORT', '');
   ExportBtn.Caption:=Ini.ReadString('Main', 'ID_EXPORT', '');
   HelpItem.Caption:=Ini.ReadString('Main', 'ID_HELP', '');
-  ID_ABOUT_TITLE:=Ini.ReadString('Main', 'ID_ABOUT_TITLE', '');
-  AboutBtn.Caption:=ID_ABOUT_TITLE;
+  ID_ABOUT:=Ini.ReadString('Main', 'ID_ABOUT', '');
+  AboutBtn.Caption:=ID_ABOUT;
 
 
   NameAppLbl.Caption:=Ini.ReadString('Main', 'ID_APP_NAME', '');
@@ -534,9 +534,9 @@ end;
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
   Application.MessageBox(PChar(Caption + ' 0.7' + #13#10 +
-  ID_LAST_UPDATE + ' 19.05.2022' + #13#10 +
+  ID_LAST_UPDATE + ' 20.05.2022' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
-  'r57zone@gmail.com'), PChar(ID_ABOUT_TITLE), MB_ICONINFORMATION);
+  'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
 
 end.

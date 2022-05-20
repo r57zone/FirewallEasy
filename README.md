@@ -3,19 +3,19 @@
 &#8211; Other languages
 
 # Firewall Easy
-Application allows you to block Internet access to other applications using the Windows Firewall.
+Application allows you to block internet access to other applications using the Windows Firewall.
 
 ## Features
 - **Blocking access in a single click**<br>
-![](https://user-images.githubusercontent.com/9499881/34356520-d2cbf3ce-ea57-11e7-80e9-b78bb56c4173.png)<br>
+![](https://user-images.githubusercontent.com/9499881/169485181-faea855c-6ce7-49d0-8962-10fd798ea125.png)<br>
 
-Right-click on the program to block her access to the Internet.
+Right-click on a program to block its internet access.
 - **Support Drag and Drop**
 
-Move the program to the "Firewall Easy" interface and access to the Internet will be blocked.
+Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
 
 ## Screenshot
-![](https://user-images.githubusercontent.com/9499881/42877820-fc9a0698-8a9b-11e8-970d-1e4410533048.png)
+![](https://user-images.githubusercontent.com/9499881/169485036-2283aa41-f76d-4975-a2dd-0810501b8e86.PNG)
 
 ## Download
 >Version for Windows 7, 8.1, 10.
