@@ -3,23 +3,23 @@
 &#8211; その他の言語
 
 # Firewall Easy
-Application allows you to block internet access to other applications using the Windows Firewall.
+Firewall Easyは、Windowsファイアウォールでアプリケーションのインターネットアクセスのブロックを簡易的に行えるようにします。
 
-## Features
-- **Blocking access in a single click**<br>
+## 特徴
+- **ワンクリックでアクセスをブロック**<br>
 ![](https://user-images.githubusercontent.com/9499881/169485181-faea855c-6ce7-49d0-8962-10fd798ea125.png)<br>
 
-Right-click on a program to block its internet access.
-- **Support Drag and Drop**
+右クリックで対象のアプリケーションのインターネットアクセスをブロックする事が可能です。
+- **ドラッグ&ドロップをサポート**
 
-Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
+「Firewall Easy」のウィンドウにドラッグ&ドロップで対象のアプリケーションのアクセスをブロックする事が可能です。
 
-## Screenshot
+## スクリーンショット
 ![](https://user-images.githubusercontent.com/9499881/169485036-2283aa41-f76d-4975-a2dd-0810501b8e86.PNG)
 
-## Download
+## ダウンロード
 >Version for Windows 7, 8.1, 10.
 
-**[Download](https://github.com/r57zone/Firewall-Easy/releases)**
-## Feedback
+**[ダウンロード](https://github.com/r57zone/Firewall-Easy/releases)**
+## フィードバック
 `r57zone[at]gmail.com`
