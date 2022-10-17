@@ -1,0 +1,25 @@
+[Main]
+ID_RULES=Règles
+ID_IMPORT=Importer
+ID_EXPORT=Exporter
+ID_HELP=Aide
+ID_ABOUT=À propos de...
+ID_APP_NAME=Nom
+ID_APP_PATH=Chemin
+ID_SEARCH=Rechercher...
+ID_ADD=Ajouter
+ID_ADD_FILTER_NAME=Applications
+ID_REMOVE=Retirer
+ID_CHECK=Vérifier
+ID_FIREWALL=Pare-Feu
+ID_EXIT=Quitter
+ID_RULE_SUCCESSFULLY_CREATED=Règle pour l'application "%s" créée avec succès
+ID_RULE_ALREADY_EXISTS=Règle pour l'application "%s" existe déjà
+ID_RULE_SUCCESSFULLY_REMOVED=Règle pour l'application "%s" retirée avec succès
+ID_CHOOSE_RULE=Choisir une règle
+ID_RULES_SUCCESSFULLY_CREATED=Règles créées avec succès :
+ID_FAILED_CREATE_RULES=Échec de la création des règles
+ID_REMOVED_RULES_FOR_NONEXISTENT_APPS=Règles retirées pour les applications inexistantes :
+ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND=Règles pour les applications inexistantes introuvables
+ID_LAST_UPDATE=Dernière mise à jour:
+ID_BLOCK_ACCESS=Bloquer l'accès Internet 
