@@ -16,10 +16,10 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
 「Firewall Easy」のウィンドウにドラッグ&ドロップで対象のアプリケーションのインターネット接続をブロックする事が可能です。
 
 ## スクリーンショット
-![](https://user-images.githubusercontent.com/9499881/169485036-2283aa41-f76d-4975-a2dd-0810501b8e86.PNG)
+![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)
 
 ## ダウンロード
->Version for Windows 7, 8.1, 10.
+>Version for Windows 7, 8.1, 10, 11.
 
 **[ダウンロード](https://github.com/r57zone/Firewall-Easy/releases)**
 ## フィードバック
