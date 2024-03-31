@@ -16,10 +16,10 @@ Right-click on a program to block its internet access.
 Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
 
 ## Screenshot
-![](https://user-images.githubusercontent.com/9499881/169485036-2283aa41-f76d-4975-a2dd-0810501b8e86.PNG)
+![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)
 
 ## Download
->Version for Windows 7, 8.1, 10.
+>Version for Windows 7, 8.1, 10, 11.
 
 **[Download](https://github.com/r57zone/Firewall-Easy/releases)**
 ## Feedback

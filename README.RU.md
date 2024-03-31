@@ -15,10 +15,10 @@
 Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
 
 ## Скриншот
-![](https://user-images.githubusercontent.com/9499881/169485106-cdf1605f-1a7f-40c8-b8fb-b247aa66d48e.png)
+![](https://github.com/r57zone/FirewallEasy/assets/9499881/426f4001-2ffb-4685-8f79-707e83c6932f)
 
 ## Загрузка
->Версия для Windows 7, 8.1, 10.
+>Версия для Windows 7, 8.1, 10, 11.
 
 **[Загрузить](https://github.com/r57zone/Firewall-Easy/releases)**
 
