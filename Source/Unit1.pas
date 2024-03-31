@@ -11,12 +11,9 @@ type
     AddBtn: TButton;
     RemBtn: TButton;
     CheckBtn: TButton;
-    ListBox: TListBox;
     FirewallBtn: TButton;
     CloseBtn: TButton;
     OpenDialog: TOpenDialog;
-    NameAppLbl: TLabel;
-    AppPathLbl: TLabel;
     SearchEdt: TEdit;
     StatusBar: TStatusBar;
     ImportDialog: TOpenDialog;
@@ -27,6 +24,7 @@ type
     ExportBtn: TMenuItem;
     HelpItem: TMenuItem;
     AboutBtn: TMenuItem;
+    ListView: TListView;
     procedure AddBtnClick(Sender: TObject);
     procedure RemBtnClick(Sender: TObject);
     procedure FirewallBtnClick(Sender: TObject);
@@ -38,22 +36,22 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure SearchEdtChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure ListBoxKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure SearchEdtKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure ListBoxKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure ListBoxDblClick(Sender: TObject);
-    procedure ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure SearchEdtKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure ImportBtnClick(Sender: TObject);
     procedure ExportBtnClick(Sender: TObject);
     procedure AboutBtnClick(Sender: TObject);
+    procedure ListViewMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ListViewKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure ListViewDblClick(Sender: TObject);
+    procedure ListViewKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
   private
@@ -187,9 +185,9 @@ end;
 
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
-  if ListBox.ItemIndex <> - 1 then begin
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListBox.ItemIndex]), 22)]); //После удаления названия уже не будет, поэтому перед удалением
-    RemoveAppRules(RuleNames.Strings[ListBox.ItemIndex]);
+  if ListView.ItemIndex <> - 1 then begin
+    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)]); //После удаления названия уже не будет, поэтому перед удалением
+    RemoveAppRules(RuleNames.Strings[ListView.ItemIndex]);
   end else StatusBar.SimpleText:=' ' + ID_CHOOSE_RULE;
 end;
 
@@ -239,10 +237,11 @@ var
   Reg : TRegistry;
   SubKeyNames: TStringList;
   RegName: string;
+  Item: TListItem;
 begin
   RuleNames.Clear;
   RulePaths.Clear;
-  ListBox.Clear;
+  ListView.Clear;
 
   Rules:=TStringList.Create;
   Reg:=TRegistry.Create;
@@ -259,7 +258,9 @@ begin
       RegName:=Copy(RegName, 1, Pos('|', RegName) - 1);
       RegName:=Copy(RegName, 1, Pos('_UDP_', RegName) - 1);
       RuleNames.Add(RegName);
-      ListBox.Items.Add(CutStr(ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]), 23) + ^I + CutStr(RulePaths.Strings[RulePaths.Count - 1], 38));
+      Item:=Main.ListView.Items.Add;
+      Item.Caption:=ExtractFileName(RulePaths.Strings[RulePaths.Count - 1]);
+      Item.SubItems.Add(RulePaths.Strings[RulePaths.Count - 1]);
     end;
   end;
   Reg.CloseKey;
@@ -303,9 +304,8 @@ begin
   ID_ABOUT:=Ini.ReadString('Main', 'ID_ABOUT', '');
   AboutBtn.Caption:=ID_ABOUT;
 
-
-  NameAppLbl.Caption:=Ini.ReadString('Main', 'ID_APP_NAME', '');
-  AppPathLbl.Caption:=Ini.ReadString('Main', 'ID_APP_PATH', '');
+  ListView.Columns[0].Caption:=Ini.ReadString('Main', 'ID_APP_NAME', '');
+  ListView.Columns[1].Caption:=Ini.ReadString('Main', 'ID_APP_PATH', '');
 
   ID_SEARCH:=Ini.ReadString('Main', 'ID_SEARCH', '');
   SearchEdt.Text:=ID_SEARCH;
@@ -390,19 +390,19 @@ end;
 
 procedure TMain.FormShow(Sender: TObject);
 begin
-  ListBox.SetFocus;
+  ListView.SetFocus;
   if CloseDuplicate then Close;
 end;
 
-procedure TMain.ListBoxKeyUp(Sender: TObject; var Key: Word;
+procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if ListBox.ItemIndex = -1 then Exit;
-  StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62);
+  if ListView.ItemIndex = -1 then Exit;
+  StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62);
   if Key = VK_DELETE then
     RemBtn.Click
-  else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListBox.ItemIndex])) then
-    ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
+  else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListView.ItemIndex])) then
+    ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListView.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
@@ -415,7 +415,7 @@ begin
   Msg.Result:=Integer(True);
 end;
 
-procedure TMain.ListBoxKeyDown(Sender: TObject; var Key: Word;
+procedure TMain.ListViewKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   // Убираем баг скрытия контролов
@@ -431,43 +431,37 @@ begin
     Key:=0;
 end;
 
-procedure TMain.ListBoxDblClick(Sender: TObject);
+procedure TMain.ListViewDblClick(Sender: TObject);
 begin
-  if ListBox.ItemIndex = -1 then Exit;
-  if FileExists(RulePaths.Strings[ListBox.ItemIndex]) then
-    ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListBox.ItemIndex] + '"'), nil, SW_SHOW);
+  if ListView.ItemIndex = -1 then Exit;
+  if FileExists(RulePaths.Strings[ListView.ItemIndex]) then
+    ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListView.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
-procedure TMain.ListBoxMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+procedure ScrollToListViewItem(LV: TListview; ItemIndex: Integer);
+var
+  R: TRect;
 begin
-  // Сбрасываем индекс, если попадаем в пустую область
-  ListBox.ItemIndex:=ListBox.ItemAtPos(Point(X, Y), true);
-
-  if ListBox.ItemIndex <> -1 then
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 62)
-  else
-    StatusBar.SimpleText:=' ';
-
-  if SearchEdt.Text = '' then begin
-    SearchEdt.Font.Color:=clGray;
-    SearchEdt.Text:=ID_SEARCH;
-  end;
+  R:=LV.Items[ItemIndex].DisplayRect(drBounds);
+  LV.Scroll(0, R.Top - LV.ClientHeight div 2);
 end;
 
 procedure TMain.SearchEdtChange(Sender: TObject);
 var
   i: integer;
 begin
-  if ListBox.Count = 0 then Exit;
-  ListBox.ItemIndex:=-1;
+  if ListView.Items.Count = 0 then Exit;
+  ListView.ItemIndex:=-1;
   for i:=0 to RuleNames.Count - 1 do
     if Pos(AnsiLowerCase(SearchEdt.Text), AnsiLowerCase(RuleNames.Strings[i])) > 0 then begin
-      ListBox.ItemIndex:=i;
+
+      ScrollToListViewItem(ListView, i);
+      //ListView.ItemIndex:=i;
+      ListView.Items.Item[i].Selected:=true;
       Break;
     end;
-  if ListBox.ItemIndex <> -1 then
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListBox.ItemIndex], 63)
+  if ListView.ItemIndex <> -1 then
+    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 63)
   else
     StatusBar.SimpleText:=' ';
 end;
@@ -533,10 +527,24 @@ end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.7' + #13#10 +
-  ID_LAST_UPDATE + ' 20.05.2022' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.7.1' + #13#10 +
+  ID_LAST_UPDATE + ' 31.03.2024' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
+end;
+
+procedure TMain.ListViewMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if ListView.ItemIndex <> -1 then
+    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62)
+  else
+    StatusBar.SimpleText:=' ';
+
+  if SearchEdt.Text = '' then begin
+    SearchEdt.Font.Color:=clGray;
+    SearchEdt.Text:=ID_SEARCH;
+  end;
 end;
 
 end.

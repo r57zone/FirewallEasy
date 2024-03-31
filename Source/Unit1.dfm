@@ -21,39 +21,13 @@ object Main: TMain
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object NameAppLbl: TLabel
-    Left = 9
-    Top = 8
-    Width = 50
-    Height = 13
-    Caption = #1053#1072#1079#1074#1072#1085#1080#1077
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-  end
-  object AppPathLbl: TLabel
-    Left = 160
-    Top = 8
-    Width = 75
-    Height = 13
-    Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-  end
   object AddBtn: TButton
     Left = 7
     Top = 271
     Width = 75
     Height = 25
     Caption = #1044#1086#1073#1072#1074#1080#1090#1100
-    TabOrder = 2
+    TabOrder = 1
     OnClick = AddBtnClick
   end
   object RemBtn: TButton
@@ -62,7 +36,7 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1059#1076#1072#1083#1080#1090#1100
-    TabOrder = 3
+    TabOrder = 2
     OnClick = RemBtnClick
   end
   object CheckBtn: TButton
@@ -71,29 +45,8 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '
-    TabOrder = 4
+    TabOrder = 3
     OnClick = CheckBtnClick
-  end
-  object ListBox: TListBox
-    Left = 8
-    Top = 24
-    Width = 393
-    Height = 217
-    Font.Charset = RUSSIAN_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ItemHeight = 13
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 0
-    TabWidth = 100
-    OnDblClick = ListBoxDblClick
-    OnKeyDown = ListBoxKeyDown
-    OnKeyUp = ListBoxKeyUp
-    OnMouseDown = ListBoxMouseDown
   end
   object FirewallBtn: TButton
     Left = 247
@@ -101,7 +54,7 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1041#1088#1072#1085#1076#1084#1072#1091#1101#1088
-    TabOrder = 5
+    TabOrder = 4
     OnClick = FirewallBtnClick
   end
   object CloseBtn: TButton
@@ -110,7 +63,7 @@ object Main: TMain
     Width = 75
     Height = 25
     Caption = #1042#1099#1093#1086#1076
-    TabOrder = 6
+    TabOrder = 5
     OnClick = CloseBtnClick
   end
   object SearchEdt: TEdit
@@ -124,7 +77,7 @@ object Main: TMain
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 0
     Text = #1055#1086#1080#1089#1082'...'
     OnChange = SearchEdtChange
     OnKeyDown = SearchEdtKeyDown
@@ -138,6 +91,30 @@ object Main: TMain
     Height = 19
     Panels = <>
     SimplePanel = True
+  end
+  object ListView: TListView
+    Left = 8
+    Top = 8
+    Width = 393
+    Height = 233
+    Columns = <
+      item
+        Caption = #1053#1072#1079#1074#1072#1085#1080#1077
+        Width = 176
+      end
+      item
+        Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077
+        Width = 194
+      end>
+    HideSelection = False
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 7
+    ViewStyle = vsReport
+    OnDblClick = ListViewDblClick
+    OnKeyDown = ListViewKeyDown
+    OnKeyUp = ListViewKeyUp
+    OnMouseDown = ListViewMouseDown
   end
   object OpenDialog: TOpenDialog
     Filter = '|*.exe'
