@@ -74,8 +74,8 @@ var
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND,
-  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_CREATE_RULES,
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_CHOOSE_RULE,
+  ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND: string;
 
 const
@@ -281,8 +281,8 @@ end;
 
 procedure TMain.HandleParams;
 var
-  WND: HWND;
   i: Integer;
+  WND: HWND;
   Msg: String;
   Extracted: String;
   Index: Integer;
@@ -300,7 +300,10 @@ begin
           Inc(BlockedCount);
           Msg:='%ADDED%';
 
-        end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+        end else begin
+          StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Msg:='%EXISTS%';
+        end;
 
       // Handles /unblock
       end else if AnsiLowerCase(ParamStr(1)) = '/unblock' then begin
@@ -324,8 +327,10 @@ begin
           end;
         end;
 
-        if not Found then
+        if not Found then begin
           StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Msg:='%MISSING%';
+        end;
       end;
 
       if Msg <> '' then begin
@@ -384,8 +389,9 @@ begin
   ID_RULE_NOT_FOUND:=Ini.ReadString('Main', 'ID_RULE_NOT_FOUND', '');
   ID_CHOOSE_RULE:=Ini.ReadString('Main', 'ID_CHOOSE_RULE', '');
   ID_RULES_SUCCESSFULLY_CREATED:=Ini.ReadString('Main', 'ID_RULES_SUCCESSFULLY_CREATED', '');
-  ID_RULES_SUCCESSFULLY_REMOVED:=Ini.ReadString('Main', 'ID_RULES_SUCCESSFULLY_REMOVED', '');
   ID_FAILED_CREATE_RULES:=Ini.ReadString('Main', 'ID_FAILED_CREATE_RULES', '');
+  ID_RULES_SUCCESSFULLY_REMOVED:=Ini.ReadString('Main', 'ID_RULES_SUCCESSFULLY_REMOVED', '');
+  ID_FAILED_REMOVE_RULES:=Ini.ReadString('Main', 'ID_FAILED_REMOVE_RULES', '');
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=Ini.ReadString('Main', 'ID_REMOVED_RULES_FOR_NONEXISTENT_APPS', '');
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=Ini.ReadString('Main', 'ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', '');
 
@@ -400,10 +406,19 @@ begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if (Reg.OpenKeyReadOnly('\exefile\shell\FirewallEasy') = false) and (Reg.OpenKey('\exefile\shell\FirewallEasy', true)) then begin
-    Reg.WriteString('', Ini.ReadString('Main', 'ID_BLOCK_ACCESS', ''));
+    Reg.WriteString('MUIVerb', Ini.ReadString('Main', 'ID_CONTEXT_MENU', ''));
     Reg.WriteString('Icon', ParamStr(0));
-    Reg.OpenKey('\exefile\shell\FirewallEasy\command', true);
-    Reg.WriteString('', ParamStr(0) + ' /block "%1"');
+    Reg.WriteString('SubCommands', '');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block', true);
+    Reg.WriteString('MUIVerb', Ini.ReadString('Main', 'ID_BLOCK_ACCESS', ''));
+    Reg.WriteString('HasLUAShield', '');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock', true);
+    Reg.WriteString('MUIVerb', Ini.ReadString('Main', 'ID_UNBLOCK_ACCESS', ''));
+    Reg.WriteString('HasLUAShield', '');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
@@ -468,7 +483,10 @@ begin
     Dec(BlockedCount);
     LoadRegRules;
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(BlockedCount);
-  end;
+  end else if Input = '%EXISTS%' then
+    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES
+  else if Input = '%MISSING%' then
+    StatusBar.SimpleText:=' ' + ID_FAILED_REMOVE_RULES;
 
   Msg.Result:=Integer(True);
 end;
