@@ -340,27 +340,28 @@ begin
     Reg.WriteString('', Ini.ReadString('Main', 'ID_BLOCK_ACCESS', ''));
     Reg.WriteString('Icon', ParamStr(0));
     Reg.OpenKey('\exefile\shell\FirewallEasy\command', true);
-    Reg.WriteString('', ParamStr(0) + ' "%1"');
+    Reg.WriteString('', ParamStr(0) + ' /block "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
   Ini.Free;
 
-  // Повторный запуск, передача ParamStr(1)
-  if ParamCount > 0 then
-    if AnsiLowerCase(ExtractFileExt(ParamStr(1))) = '.exe' then begin
-      if Pos(ParamStr(1), RulePaths.Text) = 0 then begin
-        AddRulesForApp(ParamStr(1));
-        StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
-        Inc(BlockedCount);
-        WND:=FindWindow('TMain', 'Firewall Easy');
-        if WND <> 0 then begin
-          CloseDuplicate:=true;
-          SendMessageToHandle(WND, '%ADDED%');
-        end;
+  // Повторный запуск, передача ParamStr
+  if ParamCount > 1 then
+    if AnsiLowerCase(ParamStr(1)) = '/block' then
+      if AnsiLowerCase(ExtractFileExt(ParamStr(2))) = '.exe' then begin
+        if Pos(ParamStr(2), RulePaths.Text) = 0 then begin
+          AddRulesForApp(ParamStr(2));
+          StatusBar.SimpleText := ' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Inc(BlockedCount);
+          WND := FindWindow('TMain', 'Firewall Easy');
+          if WND <> 0 then begin
+            CloseDuplicate := true;
+            SendMessageToHandle(WND, '%ADDED%');
+          end;
 
-      end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
-    end;
+        end else StatusBar.SimpleText := ' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+      end;
 
   if CloseDuplicate = false then
     Caption:='Firewall Easy';
