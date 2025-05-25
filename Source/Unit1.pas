@@ -57,6 +57,7 @@ type
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
+    procedure HandleParams;
     { Private declarations }
   public
     { Public declarations }
@@ -67,14 +68,15 @@ var
   RuleNames, RulePaths: TStringList;
   CloseDuplicate: boolean;
   BlockedCount: integer;
+  UnblockedCount: integer;
 
   // Перевод / Tranlate
   ID_SEARCH: string;
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED,
-  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES,
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_CHOOSE_RULE,
+  ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND: string;
 
 const
@@ -247,7 +249,7 @@ begin
   Reg:=TRegistry.Create;
   SubKeyNames:=TStringList.Create;
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  Reg.OpenKeyReadOnly('SYSTEM\ControlSet001\services\SharedAccess\Parameters\FirewallPolicy\FirewallRules');
+  Reg.OpenKeyReadOnly('SYSTEM\CurrentControlSet\services\SharedAccess\Parameters\FirewallPolicy\FirewallRules');
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
@@ -278,6 +280,60 @@ begin
   SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
+procedure TMain.HandleParams;
+var
+  i: Integer;
+  WND: HWND;
+  Msg: String;
+begin
+  // Повторный запуск, передача ParamStr
+  if ParamCount >= 2 then begin
+    if AnsiLowerCase(ExtractFileExt(ParamStr(2))) = '.exe' then begin
+
+      // Handles /block
+      if AnsiLowerCase(ParamStr(1)) = '/block' then begin
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+          AddRulesForApp(ExpandFileName(ParamStr(2)));
+          StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Inc(BlockedCount);
+          Msg:='%ADDED%';
+
+        end else begin
+          StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Msg:='%EXISTS%';
+        end;
+
+      // Handles /unblock
+      end else if AnsiLowerCase(ParamStr(1)) = '/unblock' then begin
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
+          for i:=0 to RuleNames.Count - 1 do begin
+            if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
+              RemoveAppRules(RuleNames.Strings[i]);
+              StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+              Inc(UnblockedCount);
+              Msg:='%REMOVED%';
+
+              Break;
+            end;
+          end;
+
+        end else begin
+          StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Msg:='%MISSING%';
+        end;
+      end;
+
+      if Msg <> '' then begin
+        WND:=FindWindow('TMain', 'Firewall Easy');
+        if WND <> 0 then begin
+          CloseDuplicate:=true;
+          SendMessageToHandle(WND, Msg);
+        end;
+      end;
+    end;
+  end;
+end;
+
 function GetLocaleInformation(flag: integer): string;
 var
   pcLCA: array [0..20] of Char;
@@ -289,7 +345,7 @@ end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
-  WND: HWND; Ini: TIniFile; Reg: TRegistry;
+  Ini: TIniFile; Reg: TRegistry;
 begin
   // Перевод / Translate
   if FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
@@ -320,9 +376,12 @@ begin
   ID_RULE_SUCCESSFULLY_CREATED:=Ini.ReadString('Main', 'ID_RULE_SUCCESSFULLY_CREATED', '');
   ID_RULE_ALREADY_EXISTS:=Ini.ReadString('Main', 'ID_RULE_ALREADY_EXISTS', '');
   ID_RULE_SUCCESSFULLY_REMOVED:=Ini.ReadString('Main', 'ID_RULE_SUCCESSFULLY_REMOVED', '');
+  ID_RULE_NOT_FOUND:=Ini.ReadString('Main', 'ID_RULE_NOT_FOUND', '');
   ID_CHOOSE_RULE:=Ini.ReadString('Main', 'ID_CHOOSE_RULE', '');
   ID_RULES_SUCCESSFULLY_CREATED:=Ini.ReadString('Main', 'ID_RULES_SUCCESSFULLY_CREATED', '');
   ID_FAILED_CREATE_RULES:=Ini.ReadString('Main', 'ID_FAILED_CREATE_RULES', '');
+  ID_RULES_SUCCESSFULLY_REMOVED:=Ini.ReadString('Main', 'ID_RULES_SUCCESSFULLY_REMOVED', '');
+  ID_FAILED_REMOVE_RULES:=Ini.ReadString('Main', 'ID_FAILED_REMOVE_RULES', '');
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=Ini.ReadString('Main', 'ID_REMOVED_RULES_FOR_NONEXISTENT_APPS', '');
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=Ini.ReadString('Main', 'ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', '');
 
@@ -337,30 +396,25 @@ begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if (Reg.OpenKeyReadOnly('\exefile\shell\FirewallEasy') = false) and (Reg.OpenKey('\exefile\shell\FirewallEasy', true)) then begin
-    Reg.WriteString('', Ini.ReadString('Main', 'ID_BLOCK_ACCESS', ''));
+    Reg.WriteString('MUIVerb', Ini.ReadString('Main', 'ID_CONTEXT_MENU', ''));
     Reg.WriteString('Icon', ParamStr(0));
-    Reg.OpenKey('\exefile\shell\FirewallEasy\command', true);
-    Reg.WriteString('', ParamStr(0) + ' "%1"');
+    Reg.WriteString('SubCommands', '');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block', true);
+    Reg.WriteString('MUIVerb', Ini.ReadString('Main', 'ID_BLOCK_ACCESS', ''));
+    Reg.WriteString('HasLUAShield', '');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock', true);
+    Reg.WriteString('MUIVerb', Ini.ReadString('Main', 'ID_UNBLOCK_ACCESS', ''));
+    Reg.WriteString('HasLUAShield', '');
+    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
   Ini.Free;
 
-  // Повторный запуск, передача ParamStr(1)
-  if ParamCount > 0 then
-    if AnsiLowerCase(ExtractFileExt(ParamStr(1))) = '.exe' then begin
-      if Pos(ParamStr(1), RulePaths.Text) = 0 then begin
-        AddRulesForApp(ParamStr(1));
-        StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
-        Inc(BlockedCount);
-        WND:=FindWindow('TMain', 'Firewall Easy');
-        if WND <> 0 then begin
-          CloseDuplicate:=true;
-          SendMessageToHandle(WND, '%ADDED%');
-        end;
-
-      end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(1)), 22)]);
-    end;
+  HandleParams;
 
   if CloseDuplicate = false then
     Caption:='Firewall Easy';
@@ -406,12 +460,24 @@ begin
 end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
+var
+  Input: string;
 begin
-  if PChar(TWMCopyData(Msg).CopyDataStruct.lpData) = '%ADDED%' then begin
+  Input:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
+
+  if Input = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
-  end;
+  end else if Input = '%REMOVED%' then begin
+    Inc(UnblockedCount);
+    LoadRegRules;
+    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount);
+  end else if Input = '%EXISTS%' then
+    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES
+  else if Input = '%MISSING%' then
+    StatusBar.SimpleText:=' ' + ID_FAILED_REMOVE_RULES;
+
   Msg.Result:=Integer(True);
 end;
 
@@ -527,8 +593,8 @@ end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.7.1' + #13#10 +
-  ID_LAST_UPDATE + ' 31.03.2024' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.8' + #13#10 +
+  ID_LAST_UPDATE + ' 25.05.2025' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
