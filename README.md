@@ -10,10 +10,17 @@ Application allows you to block internet access to other applications using the 
 - **Blocking access in a single click**<br>
 ![](https://user-images.githubusercontent.com/9499881/169485181-faea855c-6ce7-49d0-8962-10fd798ea125.png)<br>
 
-Right-click on a program to block its internet access.
+Right-click on a program to block or unblock its internet access.
 - **Support Drag and Drop**
 
 Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
+- **Command Line Arguments**
+ ```batch
+ FirewallEasy.exe /block "C:\Path\To\App.exe"
+ FirewallEasy.exe /unblock "C:\Path\To\App.exe"
+ ```
+
+Invoke the functions to block or unblock applications from accessing the internet via clis or scripts.
 
 ## Screenshot
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)
