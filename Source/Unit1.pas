@@ -68,6 +68,7 @@ var
   RuleNames, RulePaths: TStringList;
   CloseDuplicate: boolean;
   BlockedCount: integer;
+  UnblockedCount: integer;
 
   // Перевод / Tranlate
   ID_SEARCH: string;
@@ -248,7 +249,7 @@ begin
   Reg:=TRegistry.Create;
   SubKeyNames:=TStringList.Create;
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  Reg.OpenKeyReadOnly('SYSTEM\ControlSet001\services\SharedAccess\Parameters\FirewallPolicy\FirewallRules');
+  Reg.OpenKeyReadOnly('SYSTEM\CurrentControlSet\services\SharedAccess\Parameters\FirewallPolicy\FirewallRules');
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
@@ -284,9 +285,6 @@ var
   i: Integer;
   WND: HWND;
   Msg: String;
-  Extracted: String;
-  Index: Integer;
-  Found: Boolean;
 begin
   // Повторный запуск, передача ParamStr
   if ParamCount >= 2 then begin
@@ -294,8 +292,8 @@ begin
 
       // Handles /block
       if AnsiLowerCase(ParamStr(1)) = '/block' then begin
-        if Pos(ParamStr(2), RulePaths.Text) = 0 then begin
-          AddRulesForApp(ParamStr(2));
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+          AddRulesForApp(ExpandFileName(ParamStr(2)));
           StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
           Inc(BlockedCount);
           Msg:='%ADDED%';
@@ -307,27 +305,19 @@ begin
 
       // Handles /unblock
       end else if AnsiLowerCase(ParamStr(1)) = '/unblock' then begin
-        if Pos(ParamStr(2), RulePaths.Text) > 0 then begin
-          Found:=false;
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
           for i:=0 to RuleNames.Count - 1 do begin
-            Extracted:=AnsiLowerCase(RuleNames.Strings[i]);
-            Index:=Pos('.exe', Extracted);
-			if Index > 0 then Extracted:=Copy(Extracted, 1, Index + 3)
-			else Continue;
-
-            if Extracted = AnsiLowerCase(ExtractFileName(ParamStr(2))) then begin
-              Dec(BlockedCount);
-              StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+            if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
               RemoveAppRules(RuleNames.Strings[i]);
+              StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+              Inc(UnblockedCount);
               Msg:='%REMOVED%';
 
-              Found:=true;
               Break;
             end;
           end;
-        end;
 
-        if not Found then begin
+        end else begin
           StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
           Msg:='%MISSING%';
         end;
@@ -480,9 +470,9 @@ begin
     LoadRegRules;
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
   end else if Input = '%REMOVED%' then begin
-    Dec(BlockedCount);
+    Inc(UnblockedCount);
     LoadRegRules;
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(BlockedCount);
+    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount);
   end else if Input = '%EXISTS%' then
     StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES
   else if Input = '%MISSING%' then
