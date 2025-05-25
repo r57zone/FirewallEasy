@@ -7,12 +7,19 @@
 
 ## Особенности
 - **Блокировка доступа в два клика**<br>
-![](https://user-images.githubusercontent.com/9499881/34356405-d4bd3bc6-ea56-11e7-8ad9-cac90c2c278b.png)<br>
+![](https://github.com/user-attachments/assets/133f5807-3d41-4d49-9a04-df0fc73e4eed)<br>
 
 Нажмите правой кнопкой мыши на программе, чтобы заблокировать ей доступ в интернет.
 - **Поддержка Drag and Drop**
 
 Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
+- **Аргументы командной строки**
+ ```batch
+ FirewallEasy.exe /block "C:\Path\To\App.exe"
+ FirewallEasy.exe /unblock "C:\Path\To\App.exe"
+ ```
+
+Вызывайте функции для блокировки или разблокировки доступа приложений к Интернету через CLI или скрипты.
 
 ## Скриншот
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/426f4001-2ffb-4685-8f79-707e83c6932f)

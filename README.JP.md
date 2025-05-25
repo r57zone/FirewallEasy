@@ -8,12 +8,19 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
 
 ## 特徴
 - **ワンクリックでアクセスをブロック**<br>
-![](https://user-images.githubusercontent.com/9499881/169485181-faea855c-6ce7-49d0-8962-10fd798ea125.png)<br>
+![](https://github.com/user-attachments/assets/0b9d1a54-8c8b-4cd4-bf01-a598cdb6c663)<br>
 
 右クリックで対象のアプリケーションのインターネット接続をブロックする事が可能です。
 - **ドラッグ&ドロップをサポート**
 
 「Firewall Easy」のウィンドウにドラッグ&ドロップで対象のアプリケーションのインターネット接続をブロックする事が可能です。
+- **コマンドライン引数**
+ ```batch
+ FirewallEasy.exe /block "C:\Path\To\App.exe"
+ FirewallEasy.exe /unblock "C:\Path\To\App.exe"
+ ```
+
+コマンドラインやスクリプトを通じて、アプリケーションのインターネットアクセスをブロックまたは解除する機能を呼び出します。
 
 ## スクリーンショット
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)

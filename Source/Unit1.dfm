@@ -154,4 +154,12 @@ object Main: TMain
       end
     end
   end
+  object PopupMenu: TPopupMenu
+    Left = 144
+    Top = 32
+    object RemBtn2: TMenuItem
+      Caption = #1059#1076#1072#1083#1080#1090#1100
+      OnClick = RemBtn2Click
+    end
+  end
 end

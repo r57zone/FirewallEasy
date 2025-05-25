@@ -8,7 +8,7 @@ Application allows you to block internet access to other applications using the 
 
 ## Features
 - **Blocking access in a single click**<br>
-![](https://user-images.githubusercontent.com/9499881/169485181-faea855c-6ce7-49d0-8962-10fd798ea125.png)<br>
+![](https://github.com/user-attachments/assets/0b9d1a54-8c8b-4cd4-bf01-a598cdb6c663)<br>
 
 Right-click on a program to block or unblock its internet access.
 - **Support Drag and Drop**
