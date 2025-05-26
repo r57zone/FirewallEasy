@@ -93,6 +93,7 @@ const
 implementation
 
 {$R *.dfm}
+{$R Unit1.res}
 {$R UAC.res}
 
 function CutStr(Str: string; CharCount: integer): string;
