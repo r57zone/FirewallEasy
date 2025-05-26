@@ -399,16 +399,16 @@ begin
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if (Reg.OpenKeyReadOnly('\exefile\shell\FirewallEasy') = false) and (Reg.OpenKey('\exefile\shell\FirewallEasy', true)) then begin
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', '')));
-    Reg.WriteString('Icon', ParamStr(0));
+    Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
     Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block', true);
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', '')));
-    Reg.WriteString('HasLUAShield', '');
+    Reg.WriteString('Icon', ParamStr(0) + ',1');
     Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
     Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', '')));
-    Reg.WriteString('HasLUAShield', '');
+    Reg.WriteString('Icon', ParamStr(0) + ',2');
     Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
   end;
