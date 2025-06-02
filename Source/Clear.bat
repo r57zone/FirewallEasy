@@ -10,4 +10,4 @@ del *.cesettings
 del *.bak
 :del *.exe*
 
-exit
+exit /b

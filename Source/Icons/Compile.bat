@@ -8,4 +8,4 @@ echo.
 
 pause
 
-exit
+exit /b
