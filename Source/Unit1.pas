@@ -84,6 +84,9 @@ var
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED: string;
 
 const
+  APPLICATION_NAME = 'Firewall Easy';
+  APPLICATION_ID = 'FirewallEasy';
+
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
 
@@ -132,7 +135,7 @@ begin
   //NewRule.LocalPorts:=Port; // Если порт, dword
   NewRule.Direction:=NET_FW_RULE_DIR; // Входящие и исходящие соединения
   NewRule.Enabled:=true;
-  NewRule.Grouping:='FirewallEasy';
+  NewRule.Grouping:=APPLICATION_ID;
   NewRule.Profiles:=Profile;
   NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
   RulesObject.Add(NewRule);
@@ -258,7 +261,7 @@ begin
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
-    if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
+    if (Pos('EmbedCtxt=' + APPLICATION_ID, RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
       Delete(RegName, 1, Pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
@@ -331,7 +334,7 @@ function GetLocaleInformation(flag: integer): string;
 var
   pcLCA: array [0..20] of Char;
 begin
-  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, 19) <= 0 then
+  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
   Result:=pcLCA;
 end;
@@ -393,19 +396,19 @@ begin
 
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
-  if (Reg.OpenKeyReadOnly('\exefile\shell\FirewallEasy') = false) and (Reg.OpenKey('\exefile\shell\FirewallEasy', true)) then begin
+  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', '')));
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', '')));
     Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block\Command', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', '')));
     Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock\Command', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
   end;
   Reg.CloseKey;
@@ -415,7 +418,7 @@ begin
   Event:=HandleParams;
 
   if Event <> '' then begin
-    WND:=FindWindow('TMain', 'Firewall Easy');
+    WND:=FindWindow('TMain', APPLICATION_NAME);
     if WND <> 0 then begin
       CloseDuplicate:=true;
       SendMessageToHandle(WND, Event);
@@ -423,7 +426,7 @@ begin
   end;
 
   if CloseDuplicate = false then
-    Caption:='Firewall Easy';
+    Caption:=APPLICATION_NAME;
   Application.Title:=Caption;
 end;
 
@@ -435,16 +438,18 @@ end;
 
 procedure TMain.CheckBtnClick(Sender: TObject);
 var
-  i, CountRemovedRules: integer;
+  i: integer;
 begin
-  CountRemovedRules:=0;
+  UnblockedCount:=0;
   for i:=RulePaths.Count - 1 downto 0 do
     if not FileExists(RulePaths.Strings[i]) then begin
       RemoveAppRules(RuleNames.Strings[i]);
-      Inc(CountRemovedRules);
+      Inc(UnblockedCount);
     end;
 
-  if CountRemovedRules <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(CountRemovedRules) else
+  if UnblockedCount <> 0 then
+    StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount)
+  else
     StatusBar.SimpleText:=' ' + ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND;
 end;
 
@@ -467,21 +472,21 @@ end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
 var
-  Input: string;
+  Receiver: string;
 begin
-  Input:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
+  Receiver:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
 
-  if Input = '%ADDED%' then begin
+  if Receiver = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
-  end else if Input = '%REMOVED%' then begin
+  end else if Receiver = '%REMOVED%' then begin
     Inc(UnblockedCount);
     LoadRegRules;
     StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount);
-  end else if (Input = '%EXISTS%') or (Input = '%ABSENT%') then
+  end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
     StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES
-  else if Input = '%MISSING%' then
+  else if Receiver = '%MISSING%' then
     StatusBar.SimpleText:=' ' + ID_FAILED_REMOVE_RULES;
 
   Msg.Result:=Integer(True);
@@ -510,7 +515,7 @@ begin
     ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListView.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
-procedure ScrollToListViewItem(LV: TListview; ItemIndex: Integer);
+procedure ScrollToListViewItem(LV: TListview; ItemIndex: integer);
 var
   R: TRect;
 begin
@@ -561,7 +566,7 @@ begin
 end;
 
 procedure TMain.SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: integer);
 begin
   if SearchEdt.Text = ID_SEARCH then begin
     SearchEdt.Font.Color:=clBlack;
@@ -608,7 +613,7 @@ begin
 end;
 
 procedure TMain.ListViewMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: integer);
 begin
   if ListView.ItemIndex <> -1 then begin
     StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62);
