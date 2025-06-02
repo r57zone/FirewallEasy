@@ -93,7 +93,7 @@ const
 implementation
 
 {$R *.dfm}
-{$R Unit1.res}
+{$R Icons.res}
 {$R UAC.res}
 
 function CutStr(Str: string; CharCount: integer): string;
@@ -317,7 +317,6 @@ begin
           Msg:='%REMOVED%';
           Break;
         end;
-
     end else begin
       StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
       Msg:='%MISSING%';

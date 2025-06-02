@@ -1,3 +1,5 @@
+@echo off
+
 del *.obj
 del *.dcu
 del *.~*
@@ -6,4 +8,6 @@ del *.dcp
 del *.dpl
 del *.cesettings
 del *.bak
---del *.exe*
+:del *.exe*
+
+exit
