@@ -61,7 +61,7 @@ type
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
-    procedure HandleParams;
+    function HandleParams: string;
     { Private declarations }
   public
     { Public declarations }
@@ -285,11 +285,9 @@ begin
   SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
-procedure TMain.HandleParams;
+function TMain.HandleParams: string;
 var
-  i: Integer;
-  WND: HWND;
-  Msg: String;
+  i: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
   if (ParamCount < 2) or (AnsiLowerCase(ExtractFileExt(ParamStr(2))) <> '.exe') then Exit;
@@ -300,10 +298,10 @@ begin
       AddRulesForApp(ExpandFileName(ParamStr(2)));
       StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
       Inc(BlockedCount);
-      Msg:='%ADDED%';
+      Result:='%ADDED%';
     end else begin
       StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
-      Msg:='%EXISTS%';
+      Result:='%EXISTS%';
     end;
 
   // Handles "/unblock" / Обработка "/unblock"
@@ -314,20 +312,12 @@ begin
           RemoveAppRules(RuleNames.Strings[i]);
           StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
           Inc(UnblockedCount);
-          Msg:='%REMOVED%';
-          Break;
+          Result:='%REMOVED%';
+          Exit;
         end;
     end else begin
       StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
-      Msg:='%MISSING%';
-    end;
-  end;
-
-  if Msg <> '' then begin
-    WND:=FindWindow('TMain', 'Firewall Easy');
-    if WND <> 0 then begin
-      CloseDuplicate:=true;
-      SendMessageToHandle(WND, Msg);
+      Result:='%MISSING%';
     end;
   end;
 end;
@@ -343,6 +333,7 @@ end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
+  WND: HWND; Event: string;
   Ini: TIniFile; Reg: TRegistry;
   LangFileName: string;
 begin
@@ -415,7 +406,15 @@ begin
   Reg.Free;
   Ini.Free;
 
-  HandleParams;
+  Event:=HandleParams;
+
+  if Event <> '' then begin
+    WND:=FindWindow('TMain', 'Firewall Easy');
+    if WND <> 0 then begin
+      CloseDuplicate:=true;
+      SendMessageToHandle(WND, Event);
+    end;
+  end;
 
   if CloseDuplicate = false then
     Caption:='Firewall Easy';
