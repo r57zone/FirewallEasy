@@ -58,6 +58,7 @@ type
     procedure RemBtn2Click(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
+    procedure Write(Status: string = '');
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
@@ -90,7 +91,7 @@ const
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
 
-  NET_FW_RULE_DIR_IN = 1;   // IN - входящие соединения
+  NET_FW_RULE_DIR_IN = 1;   // IN  - входящие соединения
   NET_FW_RULE_DIR_OUT = 2;  // OUT - исходящие
 
 implementation
@@ -124,7 +125,7 @@ var
   Profile: integer;
   NewRule: OleVariant;
 begin
-  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; //Профили
+  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; // Профили
   fwPolicy2:=CreateOleObject('HNetCfg.FwPolicy2');
   RulesObject:=fwPolicy2.Rules;
   NewRule:=CreateOleObject('HNetCfg.FWRule');
@@ -184,21 +185,40 @@ begin
   Main.LoadRegRules;
 end;
 
+procedure SendMessageToHandle(TrgWND: HWND; MsgToHandle: string);
+var
+  CDS: TCopyDataStruct;
+begin
+  CDS.dwData:=0;
+  CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
+  CDS.lpData:=PChar(MsgToHandle);
+  SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
+end;
+
+function GetLocaleInformation(flag: integer): string;
+var
+  pcLCA: array [0..20] of Char;
+begin
+  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, Length(pcLCA)) <= 0 then
+    pcLCA[0]:=#0;
+  Result:=pcLCA;
+end;
+
 procedure TMain.AddBtnClick(Sender: TObject);
 begin
   if not OpenDialog.Execute then Exit;
   if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
     AddRulesForApp(OpenDialog.FileName);
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
-  end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
+    Write(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]));
+  end else Write(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]));
 end;
 
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListView.ItemIndex <> - 1 then begin
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)]); //После удаления названия уже не будет, поэтому перед удалением
+    Write(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)])); // После удаления названия уже не будет, поэтому перед удалением
     RemoveAppRules(RuleNames.Strings[ListView.ItemIndex]);
-  end else StatusBar.SimpleText:=' ' + ID_CHOOSE_RULE;
+  end else Write(ID_CHOOSE_RULE);
 end;
 
 procedure TMain.FirewallBtnClick(Sender: TObject);
@@ -235,9 +255,9 @@ begin
   DragFinish(Msg.WParam);
   
   if BlockedCount > 0 then
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount)
+    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount))
   else
-    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES;
+    Write(ID_FAILED_CREATE_RULES);
 end;
 
 procedure TMain.LoadRegRules;
@@ -278,14 +298,9 @@ begin
   Reg.Free;
 end;
 
-procedure SendMessageToHandle(TrgWND: HWND; MsgToHandle: string);
-var
-  CDS: TCopyDataStruct;
+procedure TMain.Write(Status: string);
 begin
-  CDS.dwData:=0;
-  CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
-  CDS.lpData:=PChar(MsgToHandle);
-  SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
+  StatusBar.SimpleText:=' ' + Status;
 end;
 
 function TMain.HandleParams: string;
@@ -300,15 +315,15 @@ begin
     if FileExists(ExpandFileName(ParamStr(2))) then begin
       if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
         AddRulesForApp(ExpandFileName(ParamStr(2)));
-        StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+        Write(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
         Inc(BlockedCount);
         Result:='%ADDED%';
       end else begin
-        StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+        Write(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
         Result:='%EXISTS%';
       end;
     end else begin
-      StatusBar.SimpleText:=' ' + Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+      Write(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
       Result:='%ABSENT%';
     end;
 
@@ -318,25 +333,16 @@ begin
       for i:=0 to RuleNames.Count - 1 do
         if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Write(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
           Inc(UnblockedCount);
           Result:='%REMOVED%';
           Exit;
         end;
     end else begin
-      StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+      Write(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
       Result:='%MISSING%';
     end;
   end;
-end;
-
-function GetLocaleInformation(flag: integer): string;
-var
-  pcLCA: array [0..20] of Char;
-begin
-  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, Length(pcLCA)) <= 0 then
-    pcLCA[0]:=#0;
-  Result:=pcLCA;
 end;
 
 procedure TMain.FormCreate(Sender: TObject);
@@ -448,9 +454,9 @@ begin
     end;
 
   if UnblockedCount <> 0 then
-    StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount)
+    Write(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
   else
-    StatusBar.SimpleText:=' ' + ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND;
+    Write(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
 end;
 
 procedure TMain.FormShow(Sender: TObject);
@@ -463,7 +469,7 @@ procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if ListView.ItemIndex = -1 then Exit;
-  StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62);
+  Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
   if Key = VK_DELETE then
     RemBtn.Click
   else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListView.ItemIndex])) then
@@ -479,15 +485,15 @@ begin
   if Receiver = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
+    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
   end else if Receiver = '%REMOVED%' then begin
     Inc(UnblockedCount);
     LoadRegRules;
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount);
+    Write(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
   end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
-    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES
+    Write(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
-    StatusBar.SimpleText:=' ' + ID_FAILED_REMOVE_RULES;
+    Write(ID_FAILED_REMOVE_RULES);
 
   Msg.Result:=Integer(True);
 end;
@@ -538,9 +544,9 @@ begin
       Break;
     end;
   if ListView.ItemIndex <> -1 then
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 63)
+    Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 63))
   else
-    StatusBar.SimpleText:=' ';
+    Write;
 end;
 
 procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
@@ -590,7 +596,7 @@ begin
         Inc(BlockedCount);
       end;
 
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
+    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
 
     ImportRulesList.Free;
   end;
@@ -600,7 +606,7 @@ procedure TMain.ExportBtnClick(Sender: TObject);
 begin
   if (ExportDialog.Execute) and (RulePaths.Count > 0) then begin
     RulePaths.SaveToFile(ExportDialog.FileName);
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_EXPORTED;
+    Write(ID_RULES_SUCCESSFULLY_EXPORTED);
   end;
 end;
 
@@ -616,10 +622,10 @@ procedure TMain.ListViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   if ListView.ItemIndex <> -1 then begin
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62);
+    Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
     if Button = mbRight then PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
   end else
-    StatusBar.SimpleText:=' ';
+    Write;
 
   if SearchEdt.Text = '' then begin
     SearchEdt.Font.Color:=clGray;
