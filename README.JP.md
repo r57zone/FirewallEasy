@@ -7,7 +7,7 @@
 Firewall Easyは、Windowsファイアウォールでアプリケーションのインターネット接続のブロックを簡易的に行えるようにします。
 
 
-以下の言語がサポートされています：英語、ロシア語、繁体字中国語、スペイン語、ポルトガル語（ブラジルポルトガル語）、フランス語、ドイツ語、日本語、アラビア語、イタリア語、韓国語。
+対応している言語は次のとおりです：英語、ロシア語、中国語（繁体字）、スペイン語、ポルトガル語（ブラジルポルトガル語）、フランス語、ドイツ語、日本語、アラビア語、イタリア語、韓国語、トルコ語です。
 
 ![flag-united-kingdom](https://github.com/user-attachments/assets/8c03c9b8-d154-466f-b9c4-6ea60278d537)
 ![flag-russia](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)
@@ -26,7 +26,7 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
 
 ## 特徴
 - **ワンクリックでアクセスをブロック**<br>
-![](https://github.com/user-attachments/assets/0b9d1a54-8c8b-4cd4-bf01-a598cdb6c663)<br>
+![](https://github.com/user-attachments/assets/29c8e921-2dcb-40aa-91a1-854dc82305c3)<br>
 
 右クリックで対象のアプリケーションのインターネット接続をブロックする事が可能です。
 - **ドラッグ&ドロップをサポート**
