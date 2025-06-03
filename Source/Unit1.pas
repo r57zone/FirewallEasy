@@ -58,7 +58,7 @@ type
     procedure RemBtn2Click(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
-    procedure Write(Status: string = '');
+    procedure Status(Status: string = '');
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
@@ -72,8 +72,7 @@ var
   Main: TMain;
   RuleNames, RulePaths: TStringList;
   CloseDuplicate: boolean;
-  BlockedCount: integer;
-  UnblockedCount: integer;
+  BlockedCount, UnblockedCount: integer;
 
   // Tranlate / Перевод
   ID_SEARCH: string;
@@ -91,8 +90,8 @@ const
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
 
-  NET_FW_RULE_DIR_IN = 1;   // IN  - входящие соединения
-  NET_FW_RULE_DIR_OUT = 2;  // OUT - исходящие
+  NET_FW_RULE_DIR_IN = 1;   // IN  - incoming connections / входящие соединения
+  NET_FW_RULE_DIR_OUT = 2;  // OUT - outgoing / исходящие
 
 implementation
 
@@ -133,8 +132,7 @@ begin
   NewRule.Description:=Caption;
   NewRule.Applicationname:=Executable;
   NewRule.Protocol:=NET_FW_IP_PROTOCOL; // Протоколы
-  //NewRule.LocalPorts:=Port; // Если порт, dword
-  NewRule.Direction:=NET_FW_RULE_DIR; // Входящие и исходящие соединения
+  NewRule.Direction:=NET_FW_RULE_DIR; // incoming connections, outgoing / Входящие и исходящие соединения
   NewRule.Enabled:=true;
   NewRule.Grouping:=APPLICATION_ID;
   NewRule.Profiles:=Profile;
@@ -209,16 +207,18 @@ begin
   if not OpenDialog.Execute then Exit;
   if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
     AddRulesForApp(OpenDialog.FileName);
-    Write(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]));
-  end else Write(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]));
+    Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]));
+  end else
+    Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]));
 end;
 
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListView.ItemIndex <> - 1 then begin
-    Write(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)])); // После удаления названия уже не будет, поэтому перед удалением
+    Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)])); // После удаления названия уже не будет, поэтому перед удалением
     RemoveAppRules(RuleNames.Strings[ListView.ItemIndex]);
-  end else Write(ID_CHOOSE_RULE);
+  end else
+    Status(ID_CHOOSE_RULE);
 end;
 
 procedure TMain.FirewallBtnClick(Sender: TObject);
@@ -255,9 +255,9 @@ begin
   DragFinish(Msg.WParam);
   
   if BlockedCount > 0 then
-    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount))
+    Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount))
   else
-    Write(ID_FAILED_CREATE_RULES);
+    Status(ID_FAILED_CREATE_RULES);
 end;
 
 procedure TMain.LoadRegRules;
@@ -298,7 +298,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.Write(Status: string);
+procedure TMain.Status(Status: string);
 begin
   StatusBar.SimpleText:=' ' + Status;
 end;
@@ -315,15 +315,15 @@ begin
     if FileExists(ExpandFileName(ParamStr(2))) then begin
       if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
         AddRulesForApp(ExpandFileName(ParamStr(2)));
-        Write(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+        Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
         Inc(BlockedCount);
         Result:='%ADDED%';
       end else begin
-        Write(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+        Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
         Result:='%EXISTS%';
       end;
     end else begin
-      Write(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
       Result:='%ABSENT%';
     end;
 
@@ -333,13 +333,13 @@ begin
       for i:=0 to RuleNames.Count - 1 do
         if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          Write(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
           Inc(UnblockedCount);
           Result:='%REMOVED%';
           Exit;
         end;
     end else begin
-      Write(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
       Result:='%MISSING%';
     end;
   end;
@@ -422,7 +422,6 @@ begin
   Ini.Free;
 
   Event:=HandleParams;
-
   if Event <> '' then begin
     WND:=FindWindow('TMain', APPLICATION_NAME);
     if WND <> 0 then begin
@@ -454,9 +453,9 @@ begin
     end;
 
   if UnblockedCount <> 0 then
-    Write(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
+    Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
   else
-    Write(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
+    Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
 end;
 
 procedure TMain.FormShow(Sender: TObject);
@@ -469,7 +468,7 @@ procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if ListView.ItemIndex = -1 then Exit;
-  Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
+  Status(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
   if Key = VK_DELETE then
     RemBtn.Click
   else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListView.ItemIndex])) then
@@ -485,15 +484,15 @@ begin
   if Receiver = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
-    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
+    Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
   end else if Receiver = '%REMOVED%' then begin
     Inc(UnblockedCount);
     LoadRegRules;
-    Write(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
+    Status(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
   end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
-    Write(ID_FAILED_CREATE_RULES)
+    Status(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
-    Write(ID_FAILED_REMOVE_RULES);
+    Status(ID_FAILED_REMOVE_RULES);
 
   Msg.Result:=Integer(True);
 end;
@@ -544,9 +543,9 @@ begin
       Break;
     end;
   if ListView.ItemIndex <> -1 then
-    Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 63))
+    Status(CutStr(RulePaths.Strings[ListView.ItemIndex], 63))
   else
-    Write;
+    Status();
 end;
 
 procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
@@ -596,7 +595,7 @@ begin
         Inc(BlockedCount);
       end;
 
-    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
+    Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
 
     ImportRulesList.Free;
   end;
@@ -606,14 +605,14 @@ procedure TMain.ExportBtnClick(Sender: TObject);
 begin
   if (ExportDialog.Execute) and (RulePaths.Count > 0) then begin
     RulePaths.SaveToFile(ExportDialog.FileName);
-    Write(ID_RULES_SUCCESSFULLY_EXPORTED);
+    Status(ID_RULES_SUCCESSFULLY_EXPORTED);
   end;
 end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
   Application.MessageBox(PChar(Caption + ' 0.8.1' + #13#10 +
-  ID_LAST_UPDATE + ' 02.06.25' + #13#10 +
+  ID_LAST_UPDATE + ' 03.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
@@ -622,10 +621,10 @@ procedure TMain.ListViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   if ListView.ItemIndex <> -1 then begin
-    Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
+    Status(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
     if Button = mbRight then PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
   end else
-    Write;
+    Status();
 
   if SearchEdt.Text = '' then begin
     SearchEdt.Font.Color:=clGray;
