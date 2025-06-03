@@ -58,10 +58,11 @@ type
     procedure RemBtn2Click(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
+    procedure Write(Status: string = '');
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
-    procedure HandleParams;
+    function HandleParams: string;
     { Private declarations }
   public
     { Public declarations }
@@ -79,21 +80,24 @@ var
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_CHOOSE_RULE,
-  ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND,
+  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED: string;
 
 const
+  APPLICATION_NAME = 'Firewall Easy';
+  APPLICATION_ID = 'FirewallEasy';
+
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
 
-  NET_FW_RULE_DIR_IN = 1;   // IN - входящие соединения
+  NET_FW_RULE_DIR_IN = 1;   // IN  - входящие соединения
   NET_FW_RULE_DIR_OUT = 2;  // OUT - исходящие
 
 implementation
 
 {$R *.dfm}
-{$R Unit1.res}
+{$R Icons.res}
 {$R UAC.res}
 
 function CutStr(Str: string; CharCount: integer): string;
@@ -121,7 +125,7 @@ var
   Profile: integer;
   NewRule: OleVariant;
 begin
-  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; //Профили
+  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; // Профили
   fwPolicy2:=CreateOleObject('HNetCfg.FwPolicy2');
   RulesObject:=fwPolicy2.Rules;
   NewRule:=CreateOleObject('HNetCfg.FWRule');
@@ -132,7 +136,7 @@ begin
   //NewRule.LocalPorts:=Port; // Если порт, dword
   NewRule.Direction:=NET_FW_RULE_DIR; // Входящие и исходящие соединения
   NewRule.Enabled:=true;
-  NewRule.Grouping:='FirewallEasy';
+  NewRule.Grouping:=APPLICATION_ID;
   NewRule.Profiles:=Profile;
   NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
   RulesObject.Add(NewRule);
@@ -181,21 +185,40 @@ begin
   Main.LoadRegRules;
 end;
 
+procedure SendMessageToHandle(TrgWND: HWND; MsgToHandle: string);
+var
+  CDS: TCopyDataStruct;
+begin
+  CDS.dwData:=0;
+  CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
+  CDS.lpData:=PChar(MsgToHandle);
+  SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
+end;
+
+function GetLocaleInformation(flag: integer): string;
+var
+  pcLCA: array [0..20] of Char;
+begin
+  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, Length(pcLCA)) <= 0 then
+    pcLCA[0]:=#0;
+  Result:=pcLCA;
+end;
+
 procedure TMain.AddBtnClick(Sender: TObject);
 begin
   if not OpenDialog.Execute then Exit;
   if Pos(OpenDialog.FileName, RulePaths.Text) = 0 then begin
     AddRulesForApp(OpenDialog.FileName);
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]);
-  end else StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]);
+    Write(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(OpenDialog.FileName), 22)]));
+  end else Write(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(OpenDialog.FileName), 23)]));
 end;
 
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListView.ItemIndex <> - 1 then begin
-    StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)]); //После удаления названия уже не будет, поэтому перед удалением
+    Write(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)])); // После удаления названия уже не будет, поэтому перед удалением
     RemoveAppRules(RuleNames.Strings[ListView.ItemIndex]);
-  end else StatusBar.SimpleText:=' ' + ID_CHOOSE_RULE;
+  end else Write(ID_CHOOSE_RULE);
 end;
 
 procedure TMain.FirewallBtnClick(Sender: TObject);
@@ -232,9 +255,9 @@ begin
   DragFinish(Msg.WParam);
   
   if BlockedCount > 0 then
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount)
+    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount))
   else
-    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES;
+    Write(ID_FAILED_CREATE_RULES);
 end;
 
 procedure TMain.LoadRegRules;
@@ -258,7 +281,7 @@ begin
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
-    if (Pos('EmbedCtxt=FirewallEasy', RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
+    if (Pos('EmbedCtxt=' + APPLICATION_ID, RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
       Delete(RegName, 1, Pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
@@ -275,35 +298,33 @@ begin
   Reg.Free;
 end;
 
-procedure SendMessageToHandle(TrgWND: HWND; MsgToHandle: string);
-var
-  CDS: TCopyDataStruct;
+procedure TMain.Write(Status: string);
 begin
-  CDS.dwData:=0;
-  CDS.cbData:=(Length(MsgToHandle) + 1) * Sizeof(char);
-  CDS.lpData:=PChar(MsgToHandle);
-  SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
+  StatusBar.SimpleText:=' ' + Status;
 end;
 
-procedure TMain.HandleParams;
+function TMain.HandleParams: string;
 var
-  i: Integer;
-  WND: HWND;
-  Msg: String;
+  i: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
   if (ParamCount < 2) or (AnsiLowerCase(ExtractFileExt(ParamStr(2))) <> '.exe') then Exit;
 
   // Handles "/block" / Обработка "/block"
   if AnsiLowerCase(ParamStr(1)) = '/block' then begin
-    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
-      AddRulesForApp(ExpandFileName(ParamStr(2)));
-      StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
-      Inc(BlockedCount);
-      Msg:='%ADDED%';
+    if FileExists(ExpandFileName(ParamStr(2))) then begin
+      if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+        AddRulesForApp(ExpandFileName(ParamStr(2)));
+        Write(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+        Inc(BlockedCount);
+        Result:='%ADDED%';
+      end else begin
+        Write(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+        Result:='%EXISTS%';
+      end;
     end else begin
-      StatusBar.SimpleText:=' ' + Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
-      Msg:='%EXISTS%';
+      Write(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Result:='%ABSENT%';
     end;
 
   // Handles "/unblock" / Обработка "/unblock"
@@ -312,38 +333,21 @@ begin
       for i:=0 to RuleNames.Count - 1 do
         if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          StatusBar.SimpleText:=' ' + Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
+          Write(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
           Inc(UnblockedCount);
-          Msg:='%REMOVED%';
-          Break;
+          Result:='%REMOVED%';
+          Exit;
         end;
-
     end else begin
-      StatusBar.SimpleText:=' ' + Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]);
-      Msg:='%MISSING%';
+      Write(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Result:='%MISSING%';
     end;
   end;
-
-  if Msg <> '' then begin
-    WND:=FindWindow('TMain', 'Firewall Easy');
-    if WND <> 0 then begin
-      CloseDuplicate:=true;
-      SendMessageToHandle(WND, Msg);
-    end;
-  end;
-end;
-
-function GetLocaleInformation(flag: integer): string;
-var
-  pcLCA: array [0..20] of Char;
-begin
-  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, 19) <= 0 then
-    pcLCA[0]:=#0;
-  Result:=pcLCA;
 end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
+  WND: HWND; Event: string;
   Ini: TIniFile; Reg: TRegistry;
   LangFileName: string;
 begin
@@ -379,6 +383,7 @@ begin
   ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', ''));
   ID_RULE_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_REMOVED', ''));
   ID_RULE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_NOT_FOUND', ''));
+  ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', ''));
   ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', ''));
   ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', ''));
   ID_FAILED_CREATE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_CREATE_RULES', ''));
@@ -397,29 +402,37 @@ begin
 
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
-  if (Reg.OpenKeyReadOnly('\exefile\shell\FirewallEasy') = false) and (Reg.OpenKey('\exefile\shell\FirewallEasy', true)) then begin
+  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', '')));
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', '')));
     Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Block\Command', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', '')));
     Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey('\exefile\shell\FirewallEasy\Shell\Unblock\Command', true);
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
   Ini.Free;
 
-  HandleParams;
+  Event:=HandleParams;
+
+  if Event <> '' then begin
+    WND:=FindWindow('TMain', APPLICATION_NAME);
+    if WND <> 0 then begin
+      CloseDuplicate:=true;
+      SendMessageToHandle(WND, Event);
+    end;
+  end;
 
   if CloseDuplicate = false then
-    Caption:='Firewall Easy';
+    Caption:=APPLICATION_NAME;
   Application.Title:=Caption;
 end;
 
@@ -431,17 +444,19 @@ end;
 
 procedure TMain.CheckBtnClick(Sender: TObject);
 var
-  i, CountRemovedRules: integer;
+  i: integer;
 begin
-  CountRemovedRules:=0;
+  UnblockedCount:=0;
   for i:=RulePaths.Count - 1 downto 0 do
     if not FileExists(RulePaths.Strings[i]) then begin
       RemoveAppRules(RuleNames.Strings[i]);
-      Inc(CountRemovedRules);
+      Inc(UnblockedCount);
     end;
 
-  if CountRemovedRules <> 0 then StatusBar.SimpleText:=' ' + ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(CountRemovedRules) else
-    StatusBar.SimpleText:=' ' + ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND;
+  if UnblockedCount <> 0 then
+    Write(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
+  else
+    Write(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
 end;
 
 procedure TMain.FormShow(Sender: TObject);
@@ -454,7 +469,7 @@ procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if ListView.ItemIndex = -1 then Exit;
-  StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62);
+  Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
   if Key = VK_DELETE then
     RemBtn.Click
   else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListView.ItemIndex])) then
@@ -463,22 +478,22 @@ end;
 
 procedure TMain.WMCopyData(var Msg: TWMCopyData);
 var
-  Input: string;
+  Receiver: string;
 begin
-  Input:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
+  Receiver:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
 
-  if Input = '%ADDED%' then begin
+  if Receiver = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
-  end else if Input = '%REMOVED%' then begin
+    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
+  end else if Receiver = '%REMOVED%' then begin
     Inc(UnblockedCount);
     LoadRegRules;
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount);
-  end else if Input = '%EXISTS%' then
-    StatusBar.SimpleText:=' ' + ID_FAILED_CREATE_RULES
-  else if Input = '%MISSING%' then
-    StatusBar.SimpleText:=' ' + ID_FAILED_REMOVE_RULES;
+    Write(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
+  end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
+    Write(ID_FAILED_CREATE_RULES)
+  else if Receiver = '%MISSING%' then
+    Write(ID_FAILED_REMOVE_RULES);
 
   Msg.Result:=Integer(True);
 end;
@@ -506,7 +521,7 @@ begin
     ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListView.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
-procedure ScrollToListViewItem(LV: TListview; ItemIndex: Integer);
+procedure ScrollToListViewItem(LV: TListview; ItemIndex: integer);
 var
   R: TRect;
 begin
@@ -529,9 +544,9 @@ begin
       Break;
     end;
   if ListView.ItemIndex <> -1 then
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 63)
+    Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 63))
   else
-    StatusBar.SimpleText:=' ';
+    Write;
 end;
 
 procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
@@ -557,7 +572,7 @@ begin
 end;
 
 procedure TMain.SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: integer);
 begin
   if SearchEdt.Text = ID_SEARCH then begin
     SearchEdt.Font.Color:=clBlack;
@@ -581,7 +596,7 @@ begin
         Inc(BlockedCount);
       end;
 
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount);
+    Write(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
 
     ImportRulesList.Free;
   end;
@@ -591,26 +606,26 @@ procedure TMain.ExportBtnClick(Sender: TObject);
 begin
   if (ExportDialog.Execute) and (RulePaths.Count > 0) then begin
     RulePaths.SaveToFile(ExportDialog.FileName);
-    StatusBar.SimpleText:=' ' + ID_RULES_SUCCESSFULLY_EXPORTED;
+    Write(ID_RULES_SUCCESSFULLY_EXPORTED);
   end;
 end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.8' + #13#10 +
-  ID_LAST_UPDATE + ' 25.05.25' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' 0.8.1' + #13#10 +
+  ID_LAST_UPDATE + ' 02.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
 
 procedure TMain.ListViewMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: integer);
 begin
   if ListView.ItemIndex <> -1 then begin
-    StatusBar.SimpleText:=' ' + CutStr(RulePaths.Strings[ListView.ItemIndex], 62);
+    Write(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
     if Button = mbRight then PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
   end else
-    StatusBar.SimpleText:=' ';
+    Write;
 
   if SearchEdt.Text = '' then begin
     SearchEdt.Font.Color:=clGray;
