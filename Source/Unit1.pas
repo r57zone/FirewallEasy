@@ -99,6 +99,8 @@ implementation
 {$R Icons.res}
 {$R UAC.res}
 
+function GetUserDefaultUILanguage: LANGID; stdcall; external 'kernel32.dll';
+
 function CutStr(Str: string; CharCount: integer): string;
 begin
   if Length(Str) > CharCount then
@@ -226,14 +228,28 @@ begin
   SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
+function MAKELCID(LangID, SortID: Word): LCID;
+begin
+  Result:=(DWORD(SortID) shl 16) or Word(LangID);
+end;
+
 function GetLocaleInformation(flag: integer): string;
+var
+  pcLCA: array [0..20] of Char;
+begin
+  if GetLocaleInfo(MAKELCID(GetUserDefaultUILanguage, SORT_DEFAULT), flag, pcLCA, Length(pcLCA)) <= 0 then
+    pcLCA[0]:=#0;
+  Result:=pcLCA;
+end;
+
+{function GetLocaleInformation2(flag: integer): string;
 var
   pcLCA: array [0..20] of Char;
 begin
   if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
   Result:=pcLCA;
-end;
+end;}
 
 procedure TMain.AddBtnClick(Sender: TObject);
 begin
