@@ -140,6 +140,39 @@ begin
   RulesObject.Add(NewRule);
 end;
 
+// Просто пример, вероятно смысла нет, потому что диалоги добавления будут не проще, чем в брандмауэер
+// Just an example, probably no point, because the add dialogs will be no simpler than in the firewall
+// AddBlockPortRule('"TestPort"', 5791, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_IN);
+{procedure AddBlockPortRule(const Caption: string; const Port: integer; NET_FW_IP_PROTOCOL, NET_FW_RULE_DIR: integer);
+const
+  NET_FW_PROFILE2_DOMAIN = 1;
+  NET_FW_PROFILE2_PRIVATE = 2;
+  NET_FW_PROFILE2_PUBLIC = 4;
+
+  NET_FW_IP_PROTOCOL_TCP = 6;
+
+  NET_FW_ACTION_BLOCK = 0;
+var
+  fwPolicy2: OleVariant;
+  RulesObject: OleVariant;
+  NewRule: OleVariant;
+  Profile: integer;
+begin
+  Profile:=NET_FW_PROFILE2_DOMAIN or NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC;
+  fwPolicy2:=CreateOleObject('HNetCfg.FwPolicy2');
+  RulesObject:=fwPolicy2.Rules;
+  NewRule:=CreateOleObject('HNetCfg.FWRule');
+  NewRule.Name:=Caption;
+  NewRule.Description:=Caption; // + Port?
+  NewRule.Protocol:=NET_FW_IP_PROTOCOL;
+  NewRule.LocalPorts:=Port;
+  NewRule.Direction:=NET_FW_RULE_DIR;
+  NewRule.Enabled:=true;
+  NewRule.Profiles:=Profile;
+  NewRule.Action:=NET_FW_ACTION_BLOCK;
+  RulesObject.Add(NewRule);
+end;}
+
 procedure AddRulesForApp(const FilePath: string);
 var
   RuleCaption: string;
