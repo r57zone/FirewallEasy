@@ -36,7 +36,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure CheckBtnClick(Sender: TObject);
     procedure SearchEdtMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+      Shift: TShiftState; X, Y: integer);
     procedure SearchEdtChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure SearchEdtKeyDown(Sender: TObject; var Key: Word;
@@ -49,7 +49,7 @@ type
     procedure ExportBtnClick(Sender: TObject);
     procedure AboutBtnClick(Sender: TObject);
     procedure ListViewMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+      Shift: TShiftState; X, Y: integer);
     procedure ListViewKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure ListViewDblClick(Sender: TObject);
@@ -58,7 +58,7 @@ type
     procedure RemBtn2Click(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
-    procedure Status(Status: string = '');
+    procedure Status(Content: string = '');
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
@@ -233,20 +233,20 @@ begin
   Result:=(DWORD(SortID) shl 16) or Word(LangID);
 end;
 
-function GetLocaleInformation(flag: integer): string;
+function GetLocaleInformation(Flag: integer): string;
 var
   pcLCA: array [0..20] of Char;
 begin
-  if GetLocaleInfo(MAKELCID(GetUserDefaultUILanguage, SORT_DEFAULT), flag, pcLCA, Length(pcLCA)) <= 0 then
+  if GetLocaleInfo(MAKELCID(GetUserDefaultUILanguage, SORT_DEFAULT), Flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
   Result:=pcLCA;
 end;
 
-{function GetLocaleInformation2(flag: integer): string;
+{function GetLocaleInformation2(Flag: integer): string;
 var
   pcLCA: array [0..20] of Char;
 begin
-  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, flag, pcLCA, Length(pcLCA)) <= 0 then
+  if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, Flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
   Result:=pcLCA;
 end;}
@@ -342,14 +342,15 @@ begin
       Item.SubItems.Add(RulePaths.Strings[RulePaths.Count - 1]);
     end;
   end;
+
   Reg.CloseKey;
   Rules.Free;
   Reg.Free;
 end;
 
-procedure TMain.Status(Status: string);
+procedure TMain.Status(Content: string);
 begin
-  StatusBar.SimpleText:=' ' + Status;
+  StatusBar.SimpleText:=' ' + Content;
 end;
 
 function TMain.HandleParams: string;
@@ -396,9 +397,9 @@ end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
-  WND: HWND; Event: string;
-  Ini: TIniFile; Reg: TRegistry;
-  LangFileName: string;
+  LangFileName, Event: string;
+  WND: HWND; Ini: TIniFile;
+  Reg: TRegistry;
 begin
   // Translate / Перевод
   LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
