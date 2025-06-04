@@ -63,6 +63,7 @@ type
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
     function HandleParams: string;
+    procedure DragAndDrop;
     { Private declarations }
   public
     { Public declarations }
@@ -395,6 +396,22 @@ begin
   end;
 end;
 
+procedure TMain.DragAndDrop;
+const
+  Value = 'EnableLUA';
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_LOCAL_MACHINE;
+
+  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System') = true) and Reg.ValueExists(Value) and (Reg.ReadInteger(Value) = 0) then
+    DragAcceptFiles(Handle, true);
+
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
 procedure TMain.FormCreate(Sender: TObject);
 var
   LangFileName, Event: string;
@@ -444,7 +461,7 @@ begin
 
   ID_LAST_UPDATE:=UTF8ToAnsi(Ini.ReadString('Main', 'LAST_UPDATE', ''));
 
-  DragAcceptFiles(Handle, true);
+  DragAndDrop;
   RuleNames:=TStringList.Create;
   RulePaths:=TStringList.Create;
 
