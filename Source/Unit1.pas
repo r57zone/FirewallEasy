@@ -64,6 +64,7 @@ type
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
     function HandleParams: string;
     procedure DragAndDrop;
+    procedure ContextMenu;
     { Private declarations }
   public
     { Public declarations }
@@ -74,6 +75,8 @@ var
   RuleNames, RulePaths: TStringList;
   CloseDuplicate: boolean;
   BlockedCount, UnblockedCount: integer;
+
+  Ini: TIniFile;
 
   // Tranlate / Перевод
   ID_SEARCH: string;
@@ -402,7 +405,7 @@ const
 var
   Reg: TRegistry;
 begin
-  Reg:=TRegistry.Create;
+  Reg:=TRegistry.Create(KEY_READ);
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
 
   if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System') = true) and Reg.ValueExists(Value) and (Reg.ReadInteger(Value) = 0) then
@@ -412,11 +415,37 @@ begin
   Reg.Free;
 end;
 
+procedure TMain.ContextMenu;
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CLASSES_ROOT;
+
+  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
+    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', '')));
+    Reg.WriteString('Icon', ParamStr(0) + ',0');
+    Reg.WriteString('SubCommands', '');
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
+    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', '')));
+    Reg.WriteString('Icon', ParamStr(0) + ',1');
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
+    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', '')));
+    Reg.WriteString('Icon', ParamStr(0) + ',2');
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
+    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
+  end;
+
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
 procedure TMain.FormCreate(Sender: TObject);
 var
+  WND: HWND; 
   LangFileName, Event: string;
-  WND: HWND; Ini: TIniFile;
-  Reg: TRegistry;
 begin
   // Translate / Перевод
   LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
@@ -467,25 +496,7 @@ begin
 
   LoadRegRules;
 
-  Reg:=TRegistry.Create;
-  Reg.RootKey:=HKEY_CLASSES_ROOT;
-  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
-    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', '')));
-    Reg.WriteString('Icon', ParamStr(0) + ',0');
-    Reg.WriteString('SubCommands', '');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
-    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', '')));
-    Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
-    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', '')));
-    Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
-  end;
-  Reg.CloseKey;
-  Reg.Free;
+  ContextMenu;
   Ini.Free;
 
   Event:=HandleParams;
