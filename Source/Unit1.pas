@@ -58,13 +58,13 @@ type
     procedure RemBtn2Click(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
-    procedure Status(Content: string = '');
+    procedure Status(const Content: string = '');
   private
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
     function HandleParams: string;
     procedure DragAndDrop;
-    procedure ContextMenu;
+    procedure ContextMenu(const Recreate: boolean = false);
     { Private declarations }
   public
     { Public declarations }
@@ -76,16 +76,14 @@ var
   CloseDuplicate: boolean;
   BlockedCount, UnblockedCount: integer;
 
-  Ini: TIniFile;
-
   // Tranlate / Перевод
   ID_SEARCH: string;
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND,
-  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
-  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED: string;
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
+  ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
 
 const
   APPLICATION_NAME = 'Firewall Easy';
@@ -352,7 +350,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.Status(Content: string);
+procedure TMain.Status(const Content: string);
 begin
   StatusBar.SimpleText:=' ' + Content;
 end;
@@ -415,28 +413,43 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu;
+procedure TMain.ContextMenu(const Recreate: boolean);
 var
   Reg: TRegistry;
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
 
-  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
-    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', '')));
+  if Recreate and Reg.OpenKey('\exefile\shell', true) then
+    Reg.DeleteKey(APPLICATION_ID);
+  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true) then begin
+    Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
     Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
-    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', '')));
+    Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',1');
     Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
-    Reg.WriteString('MUIVerb', UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', '')));
+    Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',2');
     Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
     Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
-  end;
+  end else if ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = true)
+    and (((not Reg.ValueExists('MUIVerb')) or (Reg.ReadString('MUIVerb') <> ID_CONTEXT_MENU))
+    or ((not Reg.ValueExists('Icon')) or (AnsiCompareText(Copy(Reg.ReadString('Icon'), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
+    or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Block') = true)
+    and (((not Reg.ValueExists('MUIVerb')) or (Reg.ReadString('MUIVerb') <> ID_BLOCK_ACCESS))
+    or ((not Reg.ValueExists('Icon')) or (AnsiCompareText(Copy(Reg.ReadString('Icon'), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
+    or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock') = true)
+    and (((not Reg.ValueExists('MUIVerb')) or (Reg.ReadString('MUIVerb') <> ID_UNBLOCK_ACCESS))
+    or ((not Reg.ValueExists('Icon')) or (AnsiCompareText(Copy(Reg.ReadString('Icon'), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
+    or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command') = true)
+    and (AnsiCompareText(Copy(Reg.ReadString(''), 1, Length(ParamStr(0)) + 2), ('"' + ParamStr(0)) + '"') <> 0))
+    or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command') = true)
+    and (AnsiCompareText(Copy(Reg.ReadString(''), 1, Length(ParamStr(0)) + 2), ('"' + ParamStr(0)) + '"') <> 0)) then
+      ContextMenu(true);
 
   Reg.CloseKey;
   Reg.Free;
@@ -444,7 +457,7 @@ end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
-  WND: HWND; 
+  WND: HWND; Ini: TIniFile;
   LangFileName, Event: string;
 begin
   // Translate / Перевод
@@ -490,14 +503,18 @@ begin
 
   ID_LAST_UPDATE:=UTF8ToAnsi(Ini.ReadString('Main', 'LAST_UPDATE', ''));
 
+  ID_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', ''));
+  ID_BLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', ''));
+  ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
+
+  Ini.Free;
   DragAndDrop;
+
   RuleNames:=TStringList.Create;
   RulePaths:=TStringList.Create;
-
   LoadRegRules;
 
   ContextMenu;
-  Ini.Free;
 
   Event:=HandleParams;
   if Event <> '' then begin
