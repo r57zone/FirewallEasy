@@ -414,39 +414,45 @@ begin
 end;
 
 procedure TMain.ContextMenu(const Recreate: boolean);
+const
+  ContextLabel = 'MUIVerb';
+  ContextIcon = 'Icon';
+  ContextSub = 'SubCommands';
 var
   Reg: TRegistry;
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
 
-  if Recreate and Reg.OpenKey('\exefile\shell', true) then
+  if Recreate and Reg.OpenKey('\exefile\shell', false) then
     Reg.DeleteKey(APPLICATION_ID);
   if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true) then begin
-    Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
-    Reg.WriteString('Icon', ParamStr(0) + ',0');
-    Reg.WriteString('SubCommands', '');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
-    Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
-    Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
-    Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
-    Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
+    Reg.WriteString(ContextLabel, ID_CONTEXT_MENU);
+    Reg.WriteString(ContextIcon, ParamStr(0) + ',0');
+    Reg.WriteString(ContextSub, '');
+    if Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true) then begin
+      Reg.WriteString(ContextLabel, ID_BLOCK_ACCESS);
+      Reg.WriteString(ContextIcon, ParamStr(0) + ',1');
+      if Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true) then
+        Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
+    end;
+    if Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true) then begin
+      Reg.WriteString(ContextLabel, ID_UNBLOCK_ACCESS);
+      Reg.WriteString(ContextIcon, ParamStr(0) + ',2');
+      if Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true) then
+        Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
+    end;
   end else if ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = true)
-    and (((not Reg.ValueExists('MUIVerb')) or (Reg.ReadString('MUIVerb') <> ID_CONTEXT_MENU))
-    or ((not Reg.ValueExists('Icon')) or (AnsiCompareText(Copy(Reg.ReadString('Icon'), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
+    and (((not Reg.ValueExists(ContextLabel)) or (Reg.ReadString(ContextLabel) <> ID_CONTEXT_MENU))
+    or ((not Reg.ValueExists(ContextIcon)) or (AnsiCompareText(Copy(Reg.ReadString(ContextIcon), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
     or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Block') = true)
-    and (((not Reg.ValueExists('MUIVerb')) or (Reg.ReadString('MUIVerb') <> ID_BLOCK_ACCESS))
-    or ((not Reg.ValueExists('Icon')) or (AnsiCompareText(Copy(Reg.ReadString('Icon'), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
-    or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock') = true)
-    and (((not Reg.ValueExists('MUIVerb')) or (Reg.ReadString('MUIVerb') <> ID_UNBLOCK_ACCESS))
-    or ((not Reg.ValueExists('Icon')) or (AnsiCompareText(Copy(Reg.ReadString('Icon'), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
+    and (((not Reg.ValueExists(ContextLabel)) or (Reg.ReadString(ContextLabel) <> ID_BLOCK_ACCESS))
+    or ((not Reg.ValueExists(ContextIcon)) or (AnsiCompareText(Copy(Reg.ReadString(ContextIcon), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
     or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command') = true)
     and (AnsiCompareText(Copy(Reg.ReadString(''), 1, Length(ParamStr(0)) + 2), ('"' + ParamStr(0)) + '"') <> 0))
+    or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock') = true)
+    and (((not Reg.ValueExists(ContextLabel)) or (Reg.ReadString(ContextLabel) <> ID_UNBLOCK_ACCESS))
+    or ((not Reg.ValueExists(ContextIcon)) or (AnsiCompareText(Copy(Reg.ReadString(ContextIcon), 1, Length(ParamStr(0))), ParamStr(0)) <> 0))))
     or ((Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command') = true)
     and (AnsiCompareText(Copy(Reg.ReadString(''), 1, Length(ParamStr(0)) + 2), ('"' + ParamStr(0)) + '"') <> 0)) then
       ContextMenu(true);
