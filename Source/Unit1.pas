@@ -65,6 +65,7 @@ type
     function HandleParams: string;
     procedure DragAndDrop;
     procedure ContextMenu;
+    function FetchLocaleHandler: TMemIniFile;
     { Private declarations }
   public
     { Public declarations }
@@ -434,17 +435,29 @@ begin
   Reg.Free;
 end;
 
+function TMain.FetchLocaleHandler: TMemIniFile;
+var
+  LangResName: string;
+  IniStream: TStringStream;
+begin
+  LangResName:=AnsiUpperCase(GetLocaleInformation(LOCALE_SENGLANGUAGE));
+  if FindResource(HInstance, PChar(LangResName), PChar('LANG')) = 0 then
+    LangResName := 'ENGLISH';
+
+  IniStream:=TStringStream.Create;
+  IniStream.LoadFromStream(TResourceStream.Create(HInstance, LangResName, PChar('LANG')));
+
+  Result:=TMemIniFile.Create(IniStream);
+end;
+
 procedure TMain.FormCreate(Sender: TObject);
 var
   WND: HWND;
-  Ini: TIniFile;
+  Ini: TMemIniFile;
   LangFileName, Event: string;
 begin
   // Translate / Перевод
-  LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
-  if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
-    LangFileName:='English.Ini';
-  Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
+  Ini:=FetchLocaleHandler;
 
   RulesItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES', ''));
   ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
