@@ -98,6 +98,7 @@ const
 implementation
 
 {$R *.dfm}
+{$R Languages.res}
 {$R Icons.res}
 {$R UAC.res}
 
