@@ -21,6 +21,7 @@ type
     ExportDialog: TSaveDialog;
     MainMenu1: TMainMenu;
     RulesItem: TMenuItem;
+    ReloadBtn: TMenuItem;
     ImportBtn: TMenuItem;
     ExportBtn: TMenuItem;
     HelpItem: TMenuItem;
@@ -45,6 +46,7 @@ type
       Shift: TShiftState);
     procedure SearchEdtKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure ReloadBtnClick(Sender: TObject);
     procedure ImportBtnClick(Sender: TObject);
     procedure ExportBtnClick(Sender: TObject);
     procedure AboutBtnClick(Sender: TObject);
@@ -82,8 +84,9 @@ var
   ID_ABOUT, ID_LAST_UPDATE: string;
 
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_EXECUTABLE, ID_APP_NOT_FOUND,
-  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
-  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
+  ID_CHOOSE_RULE, ID_RULES_RELOADED, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
+  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS,
+  ID_UNBLOCK_ACCESS: string;
 
 const
   APPLICATION_NAME = 'Firewall Easy';
@@ -481,6 +484,7 @@ begin
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
   RulesItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES', ''));
+  ReloadBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RELOAD', ''));
   ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
   ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ''));
   HelpItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
@@ -509,6 +513,7 @@ begin
   ID_APP_NOT_EXECUTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_EXECUTABLE', ''));
   ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', ''));
   ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', ''));
+  ID_RULES_RELOADED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_RELOADED', ''));
   ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', ''));
   ID_FAILED_CREATE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_CREATE_RULES', ''));
   ID_RULES_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_REMOVED', ''));
@@ -687,6 +692,12 @@ begin
     SearchEdt.Font.Color:=clBlack;
     SearchEdt.Clear;
   end;
+end;
+
+procedure TMain.ReloadBtnClick(Sender: TObject);
+begin
+  LoadRegRules;
+  Status(ID_RULES_RELOADED);
 end;
 
 procedure TMain.ImportBtnClick(Sender: TObject);
