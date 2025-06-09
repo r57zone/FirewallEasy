@@ -81,8 +81,8 @@ var
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
-  ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_EXECUTABLE, ID_APP_NOT_FOUND,
+  ID_CHOOSE_RULE, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
 
 const
@@ -357,43 +357,65 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i: integer;
+  i, Quiet, Block, Unblock: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
-  if (ParamCount < 2) or (AnsiLowerCase(ExtractFileExt(ParamStr(2))) <> '.exe') then Exit;
+  if ParamCount < 1 then Exit;
+
+  // Initialize Params / 
+  Quiet:=0;
+  Block:=0;
+  Unblock:=0;
+
+  // Detect Params / 
+  for i:=1 to ParamCount do begin
+    if ((Block > 0) and (i = Block+1)) or ((Unblock > 0) and (i = Unblock+1)) then
+      Continue;
+    if (Unblock <= 0) and (AnsiLowerCase(ParamStr(i)) = '/block') then
+      Block:=i
+    else if (Block <= 0) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
+      Unblock:=i;
+  end;
 
   // Handles "/block" / Обработка "/block"
-  if AnsiLowerCase(ParamStr(1)) = '/block' then begin
-    if FileExists(ExpandFileName(ParamStr(2))) then begin
-      if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
-        AddRulesForApp(ExpandFileName(ParamStr(2)));
-        Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
-        Inc(BlockedCount);
-        Result:='%ADDED%';
+  if Block > 0 then begin
+    if FileExists(ExpandFileName(ParamStr(Block+1))) then begin
+      if (AnsiLowerCase(ExtractFileExt(ParamStr(Block+1))) = '.exe') then begin
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Block+1))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+          AddRulesForApp(ExpandFileName(ParamStr(Block+1)));
+          Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+          Inc(BlockedCount);
+          Result:='%ADDED%';
+        end else begin
+          Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+          Result:='%EXISTS%';
+        end;
       end else begin
-        Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
-        Result:='%EXISTS%';
+        Status(Format(ID_APP_NOT_EXECUTABLE, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+        Result:='%INVALID%';
       end;
     end else begin
-      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
       Result:='%ABSENT%';
     end;
+    Exit;
 
   // Handles "/unblock" / Обработка "/unblock"
-  end else if AnsiLowerCase(ParamStr(1)) = '/unblock' then begin
-    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
+  end else if Unblock > 0 then begin
+    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
       for i:=0 to RuleNames.Count - 1 do
-        if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
+        if AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
           Inc(UnblockedCount);
           Result:='%REMOVED%';
           Exit;
         end;
     end else begin
-      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
       Result:='%MISSING%';
     end;
+    Exit;
   end;
 end;
 
@@ -472,6 +494,7 @@ begin
   ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', ''));
   ID_RULE_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_REMOVED', ''));
   ID_RULE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_NOT_FOUND', ''));
+  ID_APP_NOT_EXECUTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_EXECUTABLE', ''));
   ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', ''));
   ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', ''));
   ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', ''));
@@ -562,7 +585,7 @@ begin
     Inc(UnblockedCount);
     LoadRegRules;
     Status(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
-  end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
+  end else if (Receiver = '%EXISTS%') or (Receiver = '%INVALID%') or (Receiver = '%ABSENT%') then
     Status(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
     Status(ID_FAILED_REMOVE_RULES);
