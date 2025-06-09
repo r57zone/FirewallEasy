@@ -88,6 +88,7 @@ var
 const
   APPLICATION_NAME = 'Firewall Easy';
   APPLICATION_ID = 'FirewallEasy';
+  APPLICATION_VERSION = '0.8.1';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -683,7 +684,7 @@ end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.8.1' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' ' + APPLICATION_VERSION + #13#10 +
   ID_LAST_UPDATE + ' 03.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
