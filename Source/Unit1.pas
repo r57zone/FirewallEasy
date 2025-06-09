@@ -73,7 +73,7 @@ type
 var
   Main: TMain;
   RuleNames, RulePaths: TStringList;
-  CloseDuplicate: boolean;
+  CloseApplication: boolean;
   BlockedCount, UnblockedCount: integer;
 
   // Tranlate / Перевод
@@ -362,7 +362,7 @@ begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
   if ParamCount < 1 then Exit;
 
-  // Initialize Params / 
+  // Initialize Param Types / 
   Quiet:=0;
   Block:=0;
   Unblock:=0;
@@ -370,12 +370,19 @@ begin
   // Detect Params / 
   for i:=1 to ParamCount do begin
     if ((Block > 0) and (i = Block+1)) or ((Unblock > 0) and (i = Unblock+1)) then
-      Continue;
-    if (Unblock <= 0) and (AnsiLowerCase(ParamStr(i)) = '/block') then
+      Continue; // Skip secondary pairs of Params / 
+
+    if (AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q') then
+      Quiet:=i
+    else if (Unblock <= 0) and (AnsiLowerCase(ParamStr(i)) = '/block') then
       Block:=i
     else if (Block <= 0) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
       Unblock:=i;
   end;
+
+  // Handles "/quiet" / Обработка "/quiet"
+  if Quiet > 0 then
+    Result:='%QUIET%';
 
   // Handles "/block" / Обработка "/block"
   if Block > 0 then begin
@@ -383,35 +390,40 @@ begin
       if (AnsiLowerCase(ExtractFileExt(ParamStr(Block+1))) = '.exe') then begin
         if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Block+1))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
           AddRulesForApp(ExpandFileName(ParamStr(Block+1)));
-          Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+          if Result <> '%QUIET%' then begin
+            Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+            Result:='%ADDED%';
+          end;
           Inc(BlockedCount);
-          Result:='%ADDED%';
-        end else begin
+        end else if Result <> '%QUIET%' then begin
           Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
           Result:='%EXISTS%';
         end;
-      end else begin
+      end else if Result <> '%QUIET%' then begin
         Status(Format(ID_APP_NOT_EXECUTABLE, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
         Result:='%INVALID%';
       end;
-    end else begin
+    end else if Result <> '%QUIET%' then begin
       Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
       Result:='%ABSENT%';
     end;
     Exit;
+  end;
 
   // Handles "/unblock" / Обработка "/unblock"
-  end else if Unblock > 0 then begin
+  if Unblock > 0 then begin
     if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
       for i:=0 to RuleNames.Count - 1 do
         if AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
+          if Result <> '%QUIET%' then begin
+            Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
+            Result:='%REMOVED%';
+          end;
           Inc(UnblockedCount);
-          Result:='%REMOVED%';
           Exit;
         end;
-    end else begin
+    end else if Result <> '%QUIET%' then begin
       Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
       Result:='%MISSING%';
     end;
@@ -518,15 +530,17 @@ begin
   LoadRegRules;
 
   Event:=HandleParams;
-  if Event <> '' then begin
+  if Event = '%QUIET%' then
+    CloseApplication:=true
+  else if Event <> '' then begin
     WND:=FindWindow('TMain', APPLICATION_NAME);
     if WND <> 0 then begin
-      CloseDuplicate:=true;
+      CloseApplication:=true;
       SendMessageToHandle(WND, Event);
     end;
   end;
 
-  if CloseDuplicate = false then
+  if CloseApplication = false then
     Caption:=APPLICATION_NAME;
   Application.Title:=Caption;
 end;
@@ -557,7 +571,7 @@ end;
 procedure TMain.FormShow(Sender: TObject);
 begin
   ListView.SetFocus;
-  if CloseDuplicate then Close;
+  if CloseApplication then Close;
 end;
 
 procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
