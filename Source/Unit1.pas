@@ -68,6 +68,7 @@ type
     procedure DragAndDrop;
     procedure ContextMenu;
     procedure CheckRules;
+    procedure ImportFromFile(const FilePath: string);
     { Private declarations }
   public
     { Public declarations }
@@ -735,21 +736,27 @@ var
   ImportRulesList: TStringList; i: integer;
 begin
   if (ImportDialog.Execute) and (FileExists(ImportDialog.FileName)) then begin
-    CheckBtn.Click;
-    ImportRulesList:=TStringList.Create;
-    ImportRulesList.LoadFromFile(ImportDialog.FileName);
-
-    BlockedCount:=0;
-    for i:=0 to ImportRulesList.Count - 1 do
-      if Pos(ImportRulesList.Strings[i], RulePaths.Text) = 0 then begin
-        AddRulesForApp(ImportRulesList.Strings[i]);
-        Inc(BlockedCount);
-      end;
-
+    ImportFromFile(ImportDialog.FileName);
     Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
-
-    ImportRulesList.Free;
   end;
+end;
+
+procedure TMain.ImportFromFile(const FilePath: string);
+var
+  ImportRulesList: TStringList; i: integer;
+begin
+  CheckBtn.Click;
+  ImportRulesList:=TStringList.Create;
+  ImportRulesList.LoadFromFile(FilePath);
+
+  BlockedCount:=0;
+  for i:=0 to ImportRulesList.Count - 1 do
+    if Pos(ImportRulesList.Strings[i], RulePaths.Text) = 0 then begin
+      AddRulesForApp(ImportRulesList.Strings[i]);
+      Inc(BlockedCount);
+    end;
+
+  ImportRulesList.Free;
 end;
 
 procedure TMain.ExportBtnClick(Sender: TObject);
