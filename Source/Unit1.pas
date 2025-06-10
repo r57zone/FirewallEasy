@@ -361,26 +361,28 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i, Quiet, Check, Block, Unblock: integer;
+  Quiet, Check: boolean;
+  i, Block, Unblock: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
   if ParamCount < 1 then Exit;
 
-  // Initialize Param Types / 
-  Quiet:=0;
-  Check:=0;
+  // Initialize Single-type Params / 
+  Quiet:=false;
+  Check:=false;
+  // Initialize Pair-type Params / 
   Block:=0;
   Unblock:=0;
 
   // Detect Params / 
   for i:=1 to ParamCount do begin
     if ((Block > 0) and (i = Block+1)) or ((Unblock > 0) and (i = Unblock+1)) then
-      Continue; // Skip secondary pairs of Params / 
+      Continue; // Skip the secondary pair of the Params / 
 
     if (AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q') then
-      Quiet:=i
+      Quiet:=true
     else if AnsiLowerCase(ParamStr(i)) = '/check' then
-      Check:=i
+      Check:=true
     else if (Unblock <= 0) and (AnsiLowerCase(ParamStr(i)) = '/block') then
       Block:=i
     else if (Block <= 0) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
@@ -388,11 +390,11 @@ begin
   end;
 
   // Handles "/quiet" / Обработка "/quiet"
-  if Quiet > 0 then
+  if Quiet then
     Result:='%QUIET%';
 
   // Handles "/check" / Обработка "/check"
-  if Check > 0 then begin
+  if Check then begin
     CheckRules;
     if Result <> '%QUIET%' then begin
       if UnblockedCount <> 0 then
@@ -405,7 +407,7 @@ begin
   end;
 
   // Handles "/block" / Обработка "/block"
-  if Block > 0 then begin
+  if (Block > 0) and (ParamStr(Block+1) <> '') then begin
     if FileExists(ExpandFileName(ParamStr(Block+1))) then begin
       if (AnsiLowerCase(ExtractFileExt(ParamStr(Block+1))) = '.exe') then begin
         if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Block+1))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
@@ -431,7 +433,7 @@ begin
   end;
 
   // Handles "/unblock" / Обработка "/unblock"
-  if Unblock > 0 then begin
+  if (Unblock > 0) and (ParamStr(Unblock+1) <> '') then begin
     if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
       for i:=0 to RuleNames.Count - 1 do
         if AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
@@ -619,6 +621,7 @@ var
 begin
   Receiver:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
 
+  // Success Messages / 
   if Receiver = '%CHECKED%' then begin
     LoadRegRules;
     Status(ID_RULES_FOR_NONEXISTENT_APPS_CHECKED);
@@ -630,6 +633,7 @@ begin
     Inc(UnblockedCount);
     LoadRegRules;
     Status(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
+  // Error Messages / 
   end else if (Receiver = '%EXISTS%') or (Receiver = '%INVALID%') or (Receiver = '%ABSENT%') then
     Status(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
