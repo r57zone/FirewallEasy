@@ -33,11 +33,18 @@
 Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
 - **Аргументы командной строки**
  ```batch
+ FirewallEasy.exe /quiet
+ 
  FirewallEasy.exe /block "C:\Path\To\App.exe"
  FirewallEasy.exe /unblock "C:\Path\To\App.exe"
+ 
+ FirewallEasy.exe /check
+
+ FirewallEasy.exe /import "C:\Path\To\Config.fer"
+ FirewallEasy.exe /export "C:\Path\To\Config.fer"
  ```
 
-Вызывайте функции для блокировки или разблокировки доступа приложений к Интернету через CLI или скрипты.
+Invoke various functions that this program can provide via CLIs or Scripts.
 
 ## Скриншот
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/426f4001-2ffb-4685-8f79-707e83c6932f)

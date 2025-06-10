@@ -34,11 +34,18 @@ Right-click on a program to block or unblock its internet access.
 Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
 - **Command Line Arguments**
  ```batch
+ FirewallEasy.exe /quiet
+ 
  FirewallEasy.exe /block "C:\Path\To\App.exe"
  FirewallEasy.exe /unblock "C:\Path\To\App.exe"
+ 
+ FirewallEasy.exe /check
+
+ FirewallEasy.exe /import "C:\Path\To\Config.fer"
+ FirewallEasy.exe /export "C:\Path\To\Config.fer"
  ```
 
-Invoke the functions to block or unblock applications from accessing the internet via clis or scripts.
+Invoke various functions that this program can provide via CLIs or Scripts.
 
 ## Screenshot
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)
