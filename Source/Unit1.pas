@@ -86,10 +86,10 @@ var
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_EXECUTABLE, ID_APP_NOT_FOUND,
-  ID_CHOOSE_RULE, ID_RULES_RELOADED, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
-  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_CHECKED, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED,
-  ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_FILE_NOT_EXECUTABLE, ID_FILE_NOT_IMPORTABLE,
+  ID_FILE_NOT_FOUND, ID_PATH_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE, ID_RULES_RELOADED, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_CREATED,
+  ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_CHECKED,
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
 
 const
   APPLICATION_NAME = 'Firewall Easy';
@@ -364,7 +364,7 @@ end;
 function TMain.HandleParams: string;
 var
   Quiet, Check: boolean;
-  i, Block, Unblock: integer;
+  i, Block, Unblock, Import, Export: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
   if ParamCount < 1 then Exit;
@@ -375,20 +375,27 @@ begin
   // Initialize Pair-type Params / 
   Block:=0;
   Unblock:=0;
+  Import:=0;
+  Export:=0;
 
   // Detect Params / 
   for i:=1 to ParamCount do begin
-    if ((Block > 0) and (i = Block+1)) or ((Unblock > 0) and (i = Unblock+1)) then
+    if ((Block > 0) and (i = Block)) or ((Unblock > 0) and (i = Unblock)) or
+       ((Import > 0) and (i = Import)) or ((Export > 0) and (i = Export)) then
       Continue; // Skip the secondary pair of the Params / 
 
     if (AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q') then
       Quiet:=true
     else if AnsiLowerCase(ParamStr(i)) = '/check' then
       Check:=true
-    else if (Unblock <= 0) and (AnsiLowerCase(ParamStr(i)) = '/block') then
-      Block:=i
-    else if (Block <= 0) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
-      Unblock:=i;
+    else if (AnsiLowerCase(ParamStr(i)) = '/block') and (Unblock <= 0) then
+      Block:=i + 1
+    else if (AnsiLowerCase(ParamStr(i)) = '/unblock') and (Block <= 0) then
+      Unblock:=i + 1
+    else if (AnsiLowerCase(ParamStr(i)) = '/import') and (Export <= 0) then
+      Import:=i + 1
+    else if (AnsiLowerCase(ParamStr(i)) = '/export') and (Import <= 0) then
+      Export:=i + 1;
   end;
 
   // Handles "/quiet" / Обработка "/quiet"
@@ -409,47 +416,82 @@ begin
   end;
 
   // Handles "/block" / Обработка "/block"
-  if (Block > 0) and (ParamStr(Block+1) <> '') then begin
-    if FileExists(ExpandFileName(ParamStr(Block+1))) then begin
-      if (AnsiLowerCase(ExtractFileExt(ParamStr(Block+1))) = '.exe') then begin
-        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Block+1))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
-          AddRulesForApp(ExpandFileName(ParamStr(Block+1)));
+  if (Block > 0) and (ParamStr(Block) <> '') then begin
+    if FileExists(ExpandFileName(ParamStr(Block))) then begin
+      if AnsiLowerCase(ExtractFileExt(ParamStr(Block))) = '.exe' then begin
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Block))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+          AddRulesForApp(ExpandFileName(ParamStr(Block)));
           if Result <> '%QUIET%' then begin
-            Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+            Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
             Result:='%ADDED%';
           end;
           Inc(BlockedCount);
         end else if Result <> '%QUIET%' then begin
-          Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+          Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
           Result:='%EXISTS%';
         end;
       end else if Result <> '%QUIET%' then begin
-        Status(Format(ID_APP_NOT_EXECUTABLE, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+        Status(Format(ID_FILE_NOT_EXECUTABLE, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
         Result:='%INVALID%';
       end;
     end else if Result <> '%QUIET%' then begin
-      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Block+1)), 22)]));
+      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
       Result:='%ABSENT%';
     end;
     Exit;
   end;
 
   // Handles "/unblock" / Обработка "/unblock"
-  if (Unblock > 0) and (ParamStr(Unblock+1) <> '') then begin
-    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
+  if (Unblock > 0) and (ParamStr(Unblock) <> '') then begin
+    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Unblock))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
       for i:=0 to RuleNames.Count - 1 do
-        if AnsiLowerCase(ExpandFileName(ParamStr(Unblock+1))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
+        if AnsiLowerCase(ExpandFileName(ParamStr(Unblock))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
           if Result <> '%QUIET%' then begin
-            Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
+            Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(Unblock)), 22)]));
             Result:='%REMOVED%';
           end;
           Inc(UnblockedCount);
           Exit;
         end;
     end else if Result <> '%QUIET%' then begin
-      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Unblock+1)), 22)]));
+      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Unblock)), 22)]));
       Result:='%MISSING%';
+    end;
+    Exit;
+  end;
+
+  // Handles "/import" / Обработка "/import"
+  if (Import > 0) and (ParamStr(Import) <> '') then begin
+    if FileExists(ExpandFileName(ParamStr(Import))) then begin
+      if AnsiLowerCase(ExtractFileExt(ParamStr(Import))) = '.fer' then begin
+        ImportFromFile(ExpandFileName(ParamStr(Import)));
+        if Result <> '%QUIET%' then begin
+          Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
+          Result:='%IMPORTED%';
+        end;
+      end else if Result <> '%QUIET%' then begin
+        Status(Format(ID_FILE_NOT_IMPORTABLE, [CutStr(ExtractFileName(ParamStr(Import)), 22)]));
+        Result:='%INVALID%';
+      end;
+    end else if Result <> '%QUIET%' then begin
+      Status(Format(ID_FILE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Import)), 22)]));
+      Result:='%ABSENT%';
+    end;
+    Exit;
+  end;
+
+  // Handles "/export" / Обработка "/export"
+  if (Export > 0) and (ParamStr(Export) <> '') then begin
+    if DirectoryExists(ExtractFilePath(ExpandFileName(ParamStr(Export)))) then begin
+      if (((AnsiLowerCase(ExtractFileExt(ParamStr(Export))) = '.fer') and ExportToFile(ExpandFileName(ParamStr(Export)))) or ExportToFile(ExpandFileName(ParamStr(Export)) + '.fer')) and
+         (Result <> '%QUIET%') then begin
+        Status(ID_RULES_SUCCESSFULLY_EXPORTED);
+        Result:='%EXPORTED%';
+      end;
+    end else if Result <> '%QUIET%' then begin
+      Status(Format(ID_PATH_NOT_FOUND, [CutStr(ParamStr(Export), 22)]));
+      Result:='%ABSENT%';
     end;
     Exit;
   end;
@@ -531,10 +573,14 @@ begin
   ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', ''));
   ID_RULE_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_REMOVED', ''));
   ID_RULE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_NOT_FOUND', ''));
-  ID_APP_NOT_EXECUTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_EXECUTABLE', ''));
+  ID_FILE_NOT_EXECUTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE_NOT_EXECUTABLE', ''));
+  ID_FILE_NOT_IMPORTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE_NOT_IMPORTABLE', ''));
+  ID_FILE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE_NOT_FOUND', ''));
+  ID_PATH_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'PATH_NOT_FOUND', ''));
   ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', ''));
   ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', ''));
   ID_RULES_RELOADED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_RELOADED', ''));
+  ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
   ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', ''));
   ID_FAILED_CREATE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_CREATE_RULES', ''));
   ID_RULES_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_REMOVED', ''));
@@ -635,8 +681,13 @@ begin
     Inc(UnblockedCount);
     LoadRegRules;
     Status(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
+  end else if Receiver = '%IMPORTED%' then begin
+    LoadRegRules;
+    Status(ID_RULES_SUCCESSFULLY_IMPORTED);
+  end else if Receiver = '%EXPORTED%' then
+    Status(ID_RULES_SUCCESSFULLY_EXPORTED)
   // Error Messages / 
-  end else if (Receiver = '%EXISTS%') or (Receiver = '%INVALID%') or (Receiver = '%ABSENT%') then
+  else if (Receiver = '%EXISTS%') or (Receiver = '%INVALID%') or (Receiver = '%ABSENT%') then
     Status(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
     Status(ID_FAILED_REMOVE_RULES);
@@ -736,7 +787,7 @@ procedure TMain.ImportBtnClick(Sender: TObject);
 var
   ImportRulesList: TStringList; i: integer;
 begin
-  if (ImportDialog.Execute) and (FileExists(ImportDialog.FileName)) then begin
+  if ImportDialog.Execute and FileExists(ImportDialog.FileName) then begin
     ImportFromFile(ImportDialog.FileName);
     Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
   end;
