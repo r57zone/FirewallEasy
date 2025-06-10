@@ -86,8 +86,8 @@ var
 
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_EXECUTABLE, ID_APP_NOT_FOUND,
   ID_CHOOSE_RULE, ID_RULES_RELOADED, ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES,
-  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS,
-  ID_UNBLOCK_ACCESS: string;
+  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_CHECKED, ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED,
+  ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
 
 const
   APPLICATION_NAME = 'Firewall Easy';
@@ -361,13 +361,14 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i, Quiet, Block, Unblock: integer;
+  i, Quiet, Check, Block, Unblock: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
   if ParamCount < 1 then Exit;
 
   // Initialize Param Types / 
   Quiet:=0;
+  Check:=0;
   Block:=0;
   Unblock:=0;
 
@@ -378,6 +379,8 @@ begin
 
     if (AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q') then
       Quiet:=i
+    else if AnsiLowerCase(ParamStr(i)) = '/check' then
+      Check:=i
     else if (Unblock <= 0) and (AnsiLowerCase(ParamStr(i)) = '/block') then
       Block:=i
     else if (Block <= 0) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
@@ -387,6 +390,19 @@ begin
   // Handles "/quiet" / Обработка "/quiet"
   if Quiet > 0 then
     Result:='%QUIET%';
+
+  // Handles "/check" / Обработка "/check"
+  if Check > 0 then begin
+    CheckRules;
+    if Result <> '%QUIET%' then begin
+      if UnblockedCount <> 0 then
+        Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
+      else
+        Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
+      Result:='%CHECKED%';
+    end;
+    Exit;
+  end;
 
   // Handles "/block" / Обработка "/block"
   if Block > 0 then begin
@@ -520,6 +536,7 @@ begin
   ID_RULES_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_REMOVED', ''));
   ID_FAILED_REMOVE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_REMOVE_RULES', ''));
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVED_RULES_FOR_NONEXISTENT_APPS', ''));
+  ID_RULES_FOR_NONEXISTENT_APPS_CHECKED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_FOR_NONEXISTENT_APPS_UPDATED', ''));
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', ''));
 
   ID_LAST_UPDATE:=UTF8ToAnsi(Ini.ReadString('Main', 'LAST_UPDATE', ''));
@@ -602,7 +619,10 @@ var
 begin
   Receiver:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
 
-  if Receiver = '%ADDED%' then begin
+  if Receiver = '%CHECKED%' then begin
+    LoadRegRules;
+    Status(ID_RULES_FOR_NONEXISTENT_APPS_CHECKED);
+  end else if Receiver = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
     Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
