@@ -69,6 +69,7 @@ type
     procedure ContextMenu;
     procedure CheckRules;
     procedure ImportFromFile(const FilePath: string);
+    function ExportToFile(const FilePath: string): boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -761,10 +762,17 @@ end;
 
 procedure TMain.ExportBtnClick(Sender: TObject);
 begin
-  if (ExportDialog.Execute) and (RulePaths.Count > 0) then begin
-    RulePaths.SaveToFile(ExportDialog.FileName);
+  if ExportDialog.Execute and ExportToFile(ExportDialog.FileName) then
     Status(ID_RULES_SUCCESSFULLY_EXPORTED);
-  end;
+end;
+
+function TMain.ExportToFile(const FilePath: string): boolean;
+begin
+  if RulePaths.Count > 0 then begin
+    RulePaths.SaveToFile(FilePath);
+    Result:=true;
+  end else
+    Result:=false;
 end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
