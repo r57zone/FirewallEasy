@@ -67,6 +67,7 @@ type
     function HandleParams: string;
     procedure DragAndDrop;
     procedure ContextMenu;
+    procedure CheckRules;
     { Private declarations }
   public
     { Public declarations }
@@ -557,6 +558,16 @@ begin
 end;
 
 procedure TMain.CheckBtnClick(Sender: TObject);
+begin
+  CheckRules;
+
+  if UnblockedCount <> 0 then
+    Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
+  else
+    Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
+end;
+
+procedure TMain.CheckRules;
 var
   i: integer;
 begin
@@ -566,11 +577,6 @@ begin
       RemoveAppRules(RuleNames.Strings[i]);
       Inc(UnblockedCount);
     end;
-
-  if UnblockedCount <> 0 then
-    Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
-  else
-    Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
 end;
 
 procedure TMain.FormShow(Sender: TObject);
