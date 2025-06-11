@@ -44,7 +44,7 @@
  FirewallEasy.exe /export "C:\Path\To\Config.fer"
  ```
 
-Invoke various functions that this program can provide via CLIs or Scripts.
+Invoke various Functions this Application can provide through the usage of CLIs or Automating them via Scripts.
 
 ## Скриншот
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/426f4001-2ffb-4685-8f79-707e83c6932f)

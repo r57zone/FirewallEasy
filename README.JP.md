@@ -45,7 +45,7 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
  FirewallEasy.exe /export "C:\Path\To\Config.fer"
  ```
 
-Invoke various functions that this program can provide via CLIs or Scripts.
+Invoke various Functions this Application can provide through the usage of CLIs or Automating them via Scripts.
 
 ## スクリーンショット
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)

@@ -322,7 +322,7 @@ procedure TMain.LoadRegRules;
 var
   Rules: TStringList;
   i: integer;
-  Reg : TRegistry;
+  Reg: TRegistry;
   SubKeyNames: TStringList;
   RegName: string;
   Item: TListItem;
@@ -384,17 +384,17 @@ begin
        ((Import > 0) and (i = Import)) or ((Export > 0) and (i = Export)) then
       Continue; // Skip the secondary pair of the Params / 
 
-    if (AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q') then
+    if (not Quiet) and ((AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q')) then
       Quiet:=true
-    else if AnsiLowerCase(ParamStr(i)) = '/check' then
+    else if (not Check) and (AnsiLowerCase(ParamStr(i)) = '/check') then
       Check:=true
-    else if (AnsiLowerCase(ParamStr(i)) = '/block') and (Unblock <= 0) then
+    else if ((Block <= 0) and (Unblock <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/block') then
       Block:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '/unblock') and (Block <= 0) then
+    else if ((Unblock <= 0) and (Block <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
       Unblock:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '/import') and (Export <= 0) then
+    else if ((Import <= 0) and (Export <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/import') then
       Import:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '/export') and (Import <= 0) then
+    else if ((Export <= 0) and (Import <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/export') then
       Export:=i + 1;
   end;
 
@@ -485,7 +485,8 @@ begin
   if (Export > 0) and (ParamStr(Export) <> '') then begin
     if DirectoryExists(ExtractFilePath(ExpandFileName(ParamStr(Export)))) then begin
       if (((AnsiLowerCase(ExtractFileExt(ParamStr(Export))) = '.fer') and ExportToFile(ExpandFileName(ParamStr(Export)))) or ExportToFile(ExpandFileName(ParamStr(Export)) + '.fer')) and
-         (Result <> '%QUIET%') then begin
+         (Result <> '%QUIET%') then
+      begin
         Status(ID_RULES_SUCCESSFULLY_EXPORTED);
         Result:='%EXPORTED%';
       end;
@@ -503,7 +504,7 @@ var
 begin
   Reg:=TRegistry.Create(KEY_READ);
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System')) and (Reg.ValueExists('EnableLUA')) and (Reg.ReadInteger('EnableLUA') = 0) then
+  if Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System') and Reg.ValueExists('EnableLUA') and (Reg.ReadInteger('EnableLUA') = 0) then
     DragAcceptFiles(Handle, true);
   Reg.CloseKey;
   Reg.Free;
@@ -515,7 +516,7 @@ var
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
-  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
+  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true) then begin
     Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
@@ -603,13 +604,15 @@ begin
   LoadRegRules;
 
   Event:=HandleParams;
-  if Event = '%QUIET%' then
-    CloseApplication:=true
-  else if Event <> '' then begin
-    WND:=FindWindow('TMain', APPLICATION_NAME);
-    if WND <> 0 then begin
-      CloseApplication:=true;
-      SendMessageToHandle(WND, Event);
+  if Event <> '' then begin
+    if Event = '%QUIET%' then
+      CloseApplication:=true
+    else begin
+      WND:=FindWindow('TMain', APPLICATION_NAME);
+      if WND <> 0 then begin
+        CloseApplication:=true;
+        SendMessageToHandle(WND, Event);
+      end;
     end;
   end;
 
@@ -659,7 +662,7 @@ begin
   Status(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
   if Key = VK_DELETE then
     RemBtn.Click
-  else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListView.ItemIndex])) then
+  else if (Key = VK_RETURN) and FileExists(RulePaths.Strings[ListView.ItemIndex]) then
     ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListView.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
@@ -784,8 +787,6 @@ begin
 end;
 
 procedure TMain.ImportBtnClick(Sender: TObject);
-var
-  ImportRulesList: TStringList; i: integer;
 begin
   if ImportDialog.Execute and FileExists(ImportDialog.FileName) then begin
     ImportFromFile(ImportDialog.FileName);
