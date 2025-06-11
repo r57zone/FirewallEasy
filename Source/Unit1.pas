@@ -21,6 +21,7 @@ type
     ExportDialog: TSaveDialog;
     MainMenu1: TMainMenu;
     RulesItem: TMenuItem;
+    ReloadBtn: TMenuItem;
     ImportBtn: TMenuItem;
     ExportBtn: TMenuItem;
     HelpItem: TMenuItem;
@@ -45,6 +46,7 @@ type
       Shift: TShiftState);
     procedure SearchEdtKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure ReloadBtnClick(Sender: TObject);
     procedure ImportBtnClick(Sender: TObject);
     procedure ExportBtnClick(Sender: TObject);
     procedure AboutBtnClick(Sender: TObject);
@@ -65,6 +67,9 @@ type
     function HandleParams: string;
     procedure DragAndDrop;
     procedure ContextMenu;
+    procedure CheckRules;
+    procedure ImportFromFile(const FilePath: string);
+    function ExportToFile(const FilePath: string): boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -73,7 +78,7 @@ type
 var
   Main: TMain;
   RuleNames, RulePaths: TStringList;
-  CloseDuplicate: boolean;
+  CloseApplication: boolean;
   BlockedCount, UnblockedCount: integer;
 
   // Tranlate / Перевод
@@ -81,13 +86,15 @@ var
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
-  ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_FILE_NOT_EXECUTABLE, ID_FILE_NOT_IMPORTABLE,
+  ID_FILE_NOT_FOUND, ID_PATH_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE, ID_RULES_RELOADED, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_CREATED,
+  ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS, ID_RULES_FOR_NONEXISTENT_APPS_CHECKED,
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
 
 const
   APPLICATION_NAME = 'Firewall Easy';
   APPLICATION_ID = 'FirewallEasy';
+  APPLICATION_VERSION = '0.8.1';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -315,7 +322,7 @@ procedure TMain.LoadRegRules;
 var
   Rules: TStringList;
   i: integer;
-  Reg : TRegistry;
+  Reg: TRegistry;
   SubKeyNames: TStringList;
   RegName: string;
   Item: TListItem;
@@ -356,43 +363,138 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i: integer;
+  Quiet, Check: boolean;
+  i, Block, Unblock, Import, Export: integer;
 begin
   // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
-  if (ParamCount < 2) or (AnsiLowerCase(ExtractFileExt(ParamStr(2))) <> '.exe') then Exit;
+  if ParamCount < 1 then Exit;
+
+  // Initialize Single-type Params / 
+  Quiet:=false;
+  Check:=false;
+  // Initialize Pair-type Params / 
+  Block:=0;
+  Unblock:=0;
+  Import:=0;
+  Export:=0;
+
+  // Detect Params / 
+  for i:=1 to ParamCount do begin
+    if ((Block > 0) and (i = Block)) or ((Unblock > 0) and (i = Unblock)) or
+       ((Import > 0) and (i = Import)) or ((Export > 0) and (i = Export)) then
+      Continue; // Skip the secondary pair of the Params / 
+
+    if (not Quiet) and ((AnsiLowerCase(ParamStr(i)) = '/quiet') or (AnsiLowerCase(ParamStr(i)) = '/q')) then
+      Quiet:=true
+    else if (not Check) and (AnsiLowerCase(ParamStr(i)) = '/check') then
+      Check:=true
+    else if ((Block <= 0) and (Unblock <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/block') then
+      Block:=i + 1
+    else if ((Unblock <= 0) and (Block <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/unblock') then
+      Unblock:=i + 1
+    else if ((Import <= 0) and (Export <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/import') then
+      Import:=i + 1
+    else if ((Export <= 0) and (Import <= 0)) and (AnsiLowerCase(ParamStr(i)) = '/export') then
+      Export:=i + 1;
+  end;
+
+  // Handles "/quiet" / Обработка "/quiet"
+  if Quiet then
+    Result:='%QUIET%';
+
+  // Handles "/check" / Обработка "/check"
+  if Check then begin
+    CheckRules;
+    if Result <> '%QUIET%' then begin
+      if UnblockedCount <> 0 then
+        Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
+      else
+        Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
+      Result:='%CHECKED%';
+    end;
+    Exit;
+  end;
 
   // Handles "/block" / Обработка "/block"
-  if AnsiLowerCase(ParamStr(1)) = '/block' then begin
-    if FileExists(ExpandFileName(ParamStr(2))) then begin
-      if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
-        AddRulesForApp(ExpandFileName(ParamStr(2)));
-        Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
-        Inc(BlockedCount);
-        Result:='%ADDED%';
-      end else begin
-        Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
-        Result:='%EXISTS%';
+  if (Block > 0) and (ParamStr(Block) <> '') then begin
+    if FileExists(ExpandFileName(ParamStr(Block))) then begin
+      if AnsiLowerCase(ExtractFileExt(ParamStr(Block))) = '.exe' then begin
+        if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Block))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+          AddRulesForApp(ExpandFileName(ParamStr(Block)));
+          if Result <> '%QUIET%' then begin
+            Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
+            Result:='%ADDED%';
+          end;
+          Inc(BlockedCount);
+        end else if Result <> '%QUIET%' then begin
+          Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
+          Result:='%EXISTS%';
+        end;
+      end else if Result <> '%QUIET%' then begin
+        Status(Format(ID_FILE_NOT_EXECUTABLE, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
+        Result:='%INVALID%';
       end;
-    end else begin
-      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+    end else if Result <> '%QUIET%' then begin
+      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Block)), 22)]));
       Result:='%ABSENT%';
     end;
+    Exit;
+  end;
 
   // Handles "/unblock" / Обработка "/unblock"
-  end else if AnsiLowerCase(ParamStr(1)) = '/unblock' then begin
-    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
+  if (Unblock > 0) and (ParamStr(Unblock) <> '') then begin
+    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(Unblock))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
       for i:=0 to RuleNames.Count - 1 do
-        if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
+        if AnsiLowerCase(ExpandFileName(ParamStr(Unblock))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+          if Result <> '%QUIET%' then begin
+            Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(Unblock)), 22)]));
+            Result:='%REMOVED%';
+          end;
           Inc(UnblockedCount);
-          Result:='%REMOVED%';
           Exit;
         end;
-    end else begin
-      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+    end else if Result <> '%QUIET%' then begin
+      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Unblock)), 22)]));
       Result:='%MISSING%';
     end;
+    Exit;
+  end;
+
+  // Handles "/import" / Обработка "/import"
+  if (Import > 0) and (ParamStr(Import) <> '') then begin
+    if FileExists(ExpandFileName(ParamStr(Import))) then begin
+      if AnsiLowerCase(ExtractFileExt(ParamStr(Import))) = '.fer' then begin
+        ImportFromFile(ExpandFileName(ParamStr(Import)));
+        if Result <> '%QUIET%' then begin
+          Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
+          Result:='%IMPORTED%';
+        end;
+      end else if Result <> '%QUIET%' then begin
+        Status(Format(ID_FILE_NOT_IMPORTABLE, [CutStr(ExtractFileName(ParamStr(Import)), 22)]));
+        Result:='%INVALID%';
+      end;
+    end else if Result <> '%QUIET%' then begin
+      Status(Format(ID_FILE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(Import)), 22)]));
+      Result:='%ABSENT%';
+    end;
+    Exit;
+  end;
+
+  // Handles "/export" / Обработка "/export"
+  if (Export > 0) and (ParamStr(Export) <> '') then begin
+    if DirectoryExists(ExtractFilePath(ExpandFileName(ParamStr(Export)))) then begin
+      if (((AnsiLowerCase(ExtractFileExt(ParamStr(Export))) = '.fer') and ExportToFile(ExpandFileName(ParamStr(Export)))) or ExportToFile(ExpandFileName(ParamStr(Export)) + '.fer')) and
+         (Result <> '%QUIET%') then
+      begin
+        Status(ID_RULES_SUCCESSFULLY_EXPORTED);
+        Result:='%EXPORTED%';
+      end;
+    end else if Result <> '%QUIET%' then begin
+      Status(Format(ID_PATH_NOT_FOUND, [CutStr(ParamStr(Export), 22)]));
+      Result:='%ABSENT%';
+    end;
+    Exit;
   end;
 end;
 
@@ -402,7 +504,7 @@ var
 begin
   Reg:=TRegistry.Create(KEY_READ);
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System')) and (Reg.ValueExists('EnableLUA')) and (Reg.ReadInteger('EnableLUA') = 0) then
+  if Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System') and Reg.ValueExists('EnableLUA') and (Reg.ReadInteger('EnableLUA') = 0) then
     DragAcceptFiles(Handle, true);
   Reg.CloseKey;
   Reg.Free;
@@ -414,7 +516,7 @@ var
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
-  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
+  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true) then begin
     Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
@@ -446,6 +548,7 @@ begin
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
   RulesItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES', ''));
+  ReloadBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RELOAD', ''));
   ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
   ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ''));
   HelpItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
@@ -471,13 +574,20 @@ begin
   ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', ''));
   ID_RULE_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_REMOVED', ''));
   ID_RULE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_NOT_FOUND', ''));
+  ID_FILE_NOT_EXECUTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE_NOT_EXECUTABLE', ''));
+  ID_FILE_NOT_IMPORTABLE:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE_NOT_IMPORTABLE', ''));
+  ID_FILE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE_NOT_FOUND', ''));
+  ID_PATH_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'PATH_NOT_FOUND', ''));
   ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', ''));
   ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', ''));
+  ID_RULES_RELOADED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_RELOADED', ''));
+  ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
   ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', ''));
   ID_FAILED_CREATE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_CREATE_RULES', ''));
   ID_RULES_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_REMOVED', ''));
   ID_FAILED_REMOVE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_REMOVE_RULES', ''));
   ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVED_RULES_FOR_NONEXISTENT_APPS', ''));
+  ID_RULES_FOR_NONEXISTENT_APPS_CHECKED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_FOR_NONEXISTENT_APPS_UPDATED', ''));
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', ''));
 
   ID_LAST_UPDATE:=UTF8ToAnsi(Ini.ReadString('Main', 'LAST_UPDATE', ''));
@@ -495,14 +605,18 @@ begin
 
   Event:=HandleParams;
   if Event <> '' then begin
-    WND:=FindWindow('TMain', APPLICATION_NAME);
-    if WND <> 0 then begin
-      CloseDuplicate:=true;
-      SendMessageToHandle(WND, Event);
+    if Event = '%QUIET%' then
+      CloseApplication:=true
+    else begin
+      WND:=FindWindow('TMain', APPLICATION_NAME);
+      if WND <> 0 then begin
+        CloseApplication:=true;
+        SendMessageToHandle(WND, Event);
+      end;
     end;
   end;
 
-  if CloseDuplicate = false then
+  if CloseApplication = false then
     Caption:=APPLICATION_NAME;
   Application.Title:=Caption;
 end;
@@ -514,6 +628,16 @@ begin
 end;
 
 procedure TMain.CheckBtnClick(Sender: TObject);
+begin
+  CheckRules;
+
+  if UnblockedCount <> 0 then
+    Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
+  else
+    Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
+end;
+
+procedure TMain.CheckRules;
 var
   i: integer;
 begin
@@ -523,17 +647,12 @@ begin
       RemoveAppRules(RuleNames.Strings[i]);
       Inc(UnblockedCount);
     end;
-
-  if UnblockedCount <> 0 then
-    Status(ID_REMOVED_RULES_FOR_NONEXISTENT_APPS + ' ' + IntToStr(UnblockedCount))
-  else
-    Status(ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND);
 end;
 
 procedure TMain.FormShow(Sender: TObject);
 begin
   ListView.SetFocus;
-  if CloseDuplicate then Close;
+  if CloseApplication then Close;
 end;
 
 procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
@@ -543,7 +662,7 @@ begin
   Status(CutStr(RulePaths.Strings[ListView.ItemIndex], 62));
   if Key = VK_DELETE then
     RemBtn.Click
-  else if (Key = VK_RETURN) and (FileExists(RulePaths.Strings[ListView.ItemIndex])) then
+  else if (Key = VK_RETURN) and FileExists(RulePaths.Strings[ListView.ItemIndex]) then
     ShellExecute(0, 'open', 'explorer', PChar('/select, "' + RulePaths.Strings[ListView.ItemIndex] + '"'), nil, SW_SHOW);
 end;
 
@@ -553,7 +672,11 @@ var
 begin
   Receiver:=PChar(TWMCopyData(Msg).CopyDataStruct.lpData);
 
-  if Receiver = '%ADDED%' then begin
+  // Success Messages / 
+  if Receiver = '%CHECKED%' then begin
+    LoadRegRules;
+    Status(ID_RULES_FOR_NONEXISTENT_APPS_CHECKED);
+  end else if Receiver = '%ADDED%' then begin
     Inc(BlockedCount);
     LoadRegRules;
     Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
@@ -561,7 +684,13 @@ begin
     Inc(UnblockedCount);
     LoadRegRules;
     Status(ID_RULES_SUCCESSFULLY_REMOVED + ' ' + IntToStr(UnblockedCount));
-  end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
+  end else if Receiver = '%IMPORTED%' then begin
+    LoadRegRules;
+    Status(ID_RULES_SUCCESSFULLY_IMPORTED);
+  end else if Receiver = '%EXPORTED%' then
+    Status(ID_RULES_SUCCESSFULLY_EXPORTED)
+  // Error Messages / 
+  else if (Receiver = '%EXISTS%') or (Receiver = '%INVALID%') or (Receiver = '%ABSENT%') then
     Status(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
     Status(ID_FAILED_REMOVE_RULES);
@@ -651,39 +780,56 @@ begin
   end;
 end;
 
+procedure TMain.ReloadBtnClick(Sender: TObject);
+begin
+  LoadRegRules;
+  Status(ID_RULES_RELOADED);
+end;
+
 procedure TMain.ImportBtnClick(Sender: TObject);
+begin
+  if ImportDialog.Execute and FileExists(ImportDialog.FileName) then begin
+    ImportFromFile(ImportDialog.FileName);
+    Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
+  end;
+end;
+
+procedure TMain.ImportFromFile(const FilePath: string);
 var
   ImportRulesList: TStringList; i: integer;
 begin
-  if (ImportDialog.Execute) and (FileExists(ImportDialog.FileName)) then begin
-    CheckBtn.Click;
-    ImportRulesList:=TStringList.Create;
-    ImportRulesList.LoadFromFile(ImportDialog.FileName);
+  CheckBtn.Click;
+  ImportRulesList:=TStringList.Create;
+  ImportRulesList.LoadFromFile(FilePath);
 
-    BlockedCount:=0;
-    for i:=0 to ImportRulesList.Count - 1 do
-      if Pos(ImportRulesList.Strings[i], RulePaths.Text) = 0 then begin
-        AddRulesForApp(ImportRulesList.Strings[i]);
-        Inc(BlockedCount);
-      end;
+  BlockedCount:=0;
+  for i:=0 to ImportRulesList.Count - 1 do
+    if Pos(ImportRulesList.Strings[i], RulePaths.Text) = 0 then begin
+      AddRulesForApp(ImportRulesList.Strings[i]);
+      Inc(BlockedCount);
+    end;
 
-    Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
-
-    ImportRulesList.Free;
-  end;
+  ImportRulesList.Free;
 end;
 
 procedure TMain.ExportBtnClick(Sender: TObject);
 begin
-  if (ExportDialog.Execute) and (RulePaths.Count > 0) then begin
-    RulePaths.SaveToFile(ExportDialog.FileName);
+  if ExportDialog.Execute and ExportToFile(ExportDialog.FileName) then
     Status(ID_RULES_SUCCESSFULLY_EXPORTED);
-  end;
+end;
+
+function TMain.ExportToFile(const FilePath: string): boolean;
+begin
+  if RulePaths.Count > 0 then begin
+    RulePaths.SaveToFile(FilePath);
+    Result:=true;
+  end else
+    Result:=false;
 end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.8.1' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' ' + APPLICATION_VERSION + #13#10 +
   ID_LAST_UPDATE + ' 03.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);

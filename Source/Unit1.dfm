@@ -137,6 +137,10 @@ object Main: TMain
     Top = 32
     object RulesItem: TMenuItem
       Caption = #1055#1088#1072#1074#1080#1083#1072
+      object ReloadBtn: TMenuItem
+        Caption = 'Reload'
+        OnClick = ReloadBtnClick
+      end
       object ImportBtn: TMenuItem
         Caption = #1048#1084#1087#1086#1088#1090
         OnClick = ImportBtnClick
