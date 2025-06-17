@@ -90,7 +90,7 @@ var
 const
   AppName = 'Firewall Easy';
   AppID = 'FirewallEasy';
-  AppVersion = '0.8.1';
+  AppVersion = '0.8.2';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -529,8 +529,10 @@ begin
   if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
     IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
     ContextMenu(IsDifferent);
-    Reg.WriteString('Path', ParamStr(0));
-    Reg.WriteString('Version', AppVersion);
+    if IsDifferent then begin
+      Reg.WriteString('Path', ParamStr(0));
+      Reg.WriteString('Version', AppVersion);
+    end;
     Reg.CloseKey;
   end;
   Reg.Free;
