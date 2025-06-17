@@ -90,7 +90,7 @@ var
 const
   AppName = 'Firewall Easy';
   AppID = 'FirewallEasy';
-  AppVersion = '0.8.2';
+  AppVersion = '0.8.3';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -366,15 +366,15 @@ begin
   ExportParam:=0;
 
   for i:=1 to ParamCount do begin
-    if AnsiLowerCase(ParamStr(i)) = '-b' then
+    if (AnsiLowerCase(ParamStr(i)) = '-b') or (AnsiLowerCase(ParamStr(i)) = '-block') then
       BlockParam:=i + 1
-    else if AnsiLowerCase(ParamStr(i)) = '-u' then
+    else if (AnsiLowerCase(ParamStr(i)) = '-u') or (AnsiLowerCase(ParamStr(i)) = '-unblock') then
       UnblockParam:=i + 1
-    else if AnsiLowerCase(ParamStr(i)) = '-i' then
+    else if (AnsiLowerCase(ParamStr(i)) = '-i') or (AnsiLowerCase(ParamStr(i)) = '-import') then
       ImportParam:=i + 1
-    else if AnsiLowerCase(ParamStr(i)) = '-e' then
+    else if (AnsiLowerCase(ParamStr(i)) = '-e') or (AnsiLowerCase(ParamStr(i)) = '-export') then
       ExportParam:=i + 1
-    else if AnsiLowerCase(ParamStr(i)) = '-s' then
+    else if (AnsiLowerCase(ParamStr(i)) = '-s') or (AnsiLowerCase(ParamStr(i)) = '-silent') then
       Silent:=true;
   end;
 
@@ -453,15 +453,15 @@ begin
     Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
-    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Block', true);
+    Reg.OpenKey(RegKey + '\Shell\Block', true);
     Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Block\Command', true);
+    Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" -b "%1"');
-    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Unblock', true);
+    Reg.OpenKey(RegKey + '\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Unblock\Command', true);
+    Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" -u "%1"');
   end;
   Reg.CloseKey;
