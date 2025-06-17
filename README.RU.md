@@ -6,7 +6,7 @@
 Приложение позволяет заблокировать доступ в интернет другим приложения, с помощью Брандмауэр Windows.
 
 
-Поддерживаются следующие языки: английский, русский, китайский (традиционный), испанский, португальский (бразильский португальский), французский, немецкий, японский, арабский, итальянский, корейский и турецкий.
+Поддерживаются следующие языки: английский, русский, китайский (традиционный), испанский, португальский (бразильский португальский), французский, немецкий, японский, арабский, итальянский, корейский, турецкий и польский.
 
 ![flag-united-kingdom](https://github.com/user-attachments/assets/8c03c9b8-d154-466f-b9c4-6ea60278d537)
 ![flag-russia](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)
@@ -24,6 +24,7 @@
 ![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
 ![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
 ![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
+![flag-poland](https://github.com/user-attachments/assets/e94d2b22-8d24-4421-a64a-582e02297e96)
 
 ## Особенности
 **• Блокировка доступа в два клика**<br>

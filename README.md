@@ -7,7 +7,7 @@
 Application allows you to block internet access to other applications using the Windows Firewall.
 
 
-The following languages ​​are supported: English, Russian, Chinese (Traditional), Spanish, Portuguese (Brazilian Portuguese), French, German, Japanese, Arabic, Italian, Korean and Turkish.
+The following languages are supported: English, Russian, Chinese (Traditional), Spanish, Portuguese (Brazilian Portuguese), French, German, Japanese, Arabic, Italian, Korean, Turkish, and Polish.
 
 ![flag-united-kingdom](https://github.com/user-attachments/assets/8c03c9b8-d154-466f-b9c4-6ea60278d537)
 ![flag-russia](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)
@@ -24,6 +24,7 @@ The following languages ​​are supported: English, Russian, Chinese (Traditio
 ![flag-north-korea](https://github.com/user-attachments/assets/5b315a3d-6ce0-4cbb-b7a3-133ef2bcb2c5)
 ![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
 ![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
+![flag-poland](https://github.com/user-attachments/assets/e94d2b22-8d24-4421-a64a-582e02297e96)
 
 ## Features
 **• Blocking access in a single click**<br>
