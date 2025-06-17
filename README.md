@@ -26,14 +26,16 @@ The following languages ​​are supported: English, Russian, Chinese (Traditio
 ![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
 
 ## Features
-- **Blocking access in a single click**<br>
+**• Blocking access in a single click**<br>
 ![](https://github.com/user-attachments/assets/29c8e921-2dcb-40aa-91a1-854dc82305c3)<br>
 
 Right-click on a program to block or unblock its internet access.
-- **Support Drag and Drop**
+
+**• Support Drag and Drop**
 
 Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
-- **Command Line Arguments**
+
+**• Command Line Arguments**
 
 | Command                                              | Description                                     |
 |------------------------------------------------------|-------------------------------------------------|
