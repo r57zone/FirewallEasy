@@ -64,16 +64,18 @@ type
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
     function HandleParams: string;
     procedure DragAndDrop;
-    procedure ContextMenu;
+    procedure ContextMenu(Recreate: boolean);
     { Private declarations }
   public
+    procedure ImportRules(const FilePath: string);
+    function ExportRules(const FilePath: string): boolean;
     { Public declarations }
   end;
 
 var
   Main: TMain;
   RuleNames, RulePaths: TStringList;
-  CloseDuplicate: boolean;
+  CloseApplication: boolean;
   BlockedCount, UnblockedCount: integer;
 
   // Tranlate / Перевод
@@ -83,11 +85,12 @@ var
 
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
   ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
-  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
 
 const
-  APPLICATION_NAME = 'Firewall Easy';
-  APPLICATION_ID = 'FirewallEasy';
+  AppName = 'Firewall Easy';
+  AppID = 'FirewallEasy';
+  AppVersion = '0.8.1';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -138,7 +141,7 @@ begin
   NewRule.Protocol:=NET_FW_IP_PROTOCOL; // Протоколы
   NewRule.Direction:=NET_FW_RULE_DIR; // incoming connections, outgoing / Входящие и исходящие соединения
   NewRule.Enabled:=true;
-  NewRule.Grouping:=APPLICATION_ID;
+  NewRule.Grouping:=AppID;
   NewRule.Profiles:=Profile;
   NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
   RulesObject.Add(NewRule);
@@ -216,7 +219,7 @@ begin
   RemoveRuleFromFirewall(RuleName + '_UDP_IN');
   RemoveRuleFromFirewall(RuleName + '_UDP_OUT');
 
-  // Обновляем список, обновляем RuleNames, RulePaths
+  // Update the list, update RuleNames, RulePaths / Обновляем список, обновляем RuleNames, RulePaths
   Main.LoadRegRules;
 end;
 
@@ -230,21 +233,16 @@ begin
   SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
-function MAKELCID(LangID, SortID: Word): LCID;
-begin
-  Result:=(DWORD(SortID) shl 16) or Word(LangID);
-end;
-
-function GetLocaleInformation(Flag: integer): string;
+function GetLocaleInformation(Flag: integer): string; // If there are multiple languages in the system (with sorting) / Если в системе несколько языков (с сортировкой)
 var
   pcLCA: array [0..20] of Char;
 begin
-  if GetLocaleInfo(MAKELCID(GetUserDefaultUILanguage, SORT_DEFAULT), Flag, pcLCA, Length(pcLCA)) <= 0 then
+  if GetLocaleInfo((DWORD(SORT_DEFAULT) shl 16) or Word(GetUserDefaultUILanguage), Flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
   Result:=pcLCA;
 end;
 
-{function GetLocaleInformation2(Flag: integer): string;
+{function GetLocaleInformation2(Flag: integer): string; // Legacy
 var
   pcLCA: array [0..20] of Char;
 begin
@@ -315,7 +313,7 @@ procedure TMain.LoadRegRules;
 var
   Rules: TStringList;
   i: integer;
-  Reg : TRegistry;
+  Reg: TRegistry;
   SubKeyNames: TStringList;
   RegName: string;
   Item: TListItem;
@@ -332,7 +330,7 @@ begin
   Reg.GetValueNames(Rules);
   for i:=0 to Rules.Count - 1 do begin
     RegName:=Reg.ReadString(Rules.Strings[i]);
-    if (Pos('EmbedCtxt=' + APPLICATION_ID, RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
+    if (Pos('EmbedCtxt=' + AppID, RegName) > 0) and (Pos('Dir=In', RegName) > 0) and (Pos('_UDP_', RegName) > 0) then begin
       Delete(RegName, 1, Pos('App=', RegName) + 3);
       RulePaths.Add(Copy(RegName, 1, Pos('|', RegName) - 1));
       Delete(RegName, 1, Pos('Name=', RegName) + 4);
@@ -356,43 +354,76 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i: integer;
+  i, BlockParam, UnblockParam, ImportParam, ExportParam: integer;
+  Silent: boolean;
 begin
-  // Repeated launch, passing ParamStr / Повторный запуск, передача ParamStr
-  if (ParamCount < 2) or (AnsiLowerCase(ExtractFileExt(ParamStr(2))) <> '.exe') then Exit;
+  if ParamCount < 1 then Exit;
 
-  // Handles "/block" / Обработка "/block"
-  if AnsiLowerCase(ParamStr(1)) = '/block' then begin
-    if FileExists(ExpandFileName(ParamStr(2))) then begin
-      if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
-        AddRulesForApp(ExpandFileName(ParamStr(2)));
-        Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+  Silent:=false;
+  BlockParam:=0;
+  UnblockParam:=0;
+  ImportParam:=0;
+  ExportParam:=0;
+
+  for i:=1 to ParamCount do begin
+    if AnsiLowerCase(ParamStr(i)) = '-b' then
+      BlockParam:=i + 1
+    else if AnsiLowerCase(ParamStr(i)) = '-u' then
+      UnblockParam:=i + 1
+    else if AnsiLowerCase(ParamStr(i)) = '-i' then
+      ImportParam:=i + 1
+    else if AnsiLowerCase(ParamStr(i)) = '-e' then
+      ExportParam:=i + 1
+    else if AnsiLowerCase(ParamStr(i)) = '-s' then
+      Silent:=true;
+  end;
+
+  // Block
+  if (BlockParam > 0) and (AnsiLowerCase(ExtractFileExt(ParamStr(BlockParam))) = '.exe') then begin
+    if FileExists(ExpandFileName(ParamStr(BlockParam))) then begin
+      if Pos(AnsiLowerCase(ExpandFileName(ParamStr(BlockParam))), AnsiLowerCase(RulePaths.Text)) = 0 then begin
+        AddRulesForApp(ExpandFileName(ParamStr(BlockParam)));
+        Status(Format(ID_RULE_SUCCESSFULLY_CREATED, [CutStr(ExtractFileName(ParamStr(BlockParam)), 22)]));
         Inc(BlockedCount);
         Result:='%ADDED%';
       end else begin
-        Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+        Status(Format(ID_RULE_ALREADY_EXISTS, [CutStr(ExtractFileName(ParamStr(BlockParam)), 22)]));
         Result:='%EXISTS%';
       end;
     end else begin
-      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Status(Format(ID_APP_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(BlockParam)), 22)]));
       Result:='%ABSENT%';
     end;
 
-  // Handles "/unblock" / Обработка "/unblock"
-  end else if AnsiLowerCase(ParamStr(1)) = '/unblock' then begin
-    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(2))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
+  // Unblock
+  end else if (UnblockParam > 0) and (AnsiLowerCase(ExtractFileExt(ParamStr(UnblockParam))) = '.exe') then begin
+    if Pos(AnsiLowerCase(ExpandFileName(ParamStr(UnblockParam))), AnsiLowerCase(RulePaths.Text)) > 0 then begin
       for i:=0 to RuleNames.Count - 1 do
-        if AnsiLowerCase(ExpandFileName(ParamStr(2))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
+        if AnsiLowerCase(ExpandFileName(ParamStr(UnblockParam))) = AnsiLowerCase(RulePaths.Strings[i]) then begin
           RemoveAppRules(RuleNames.Strings[i]);
-          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+          Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(ParamStr(UnblockParam)), 22)]));
           Inc(UnblockedCount);
           Result:='%REMOVED%';
-          Exit;
+          Break;
         end;
     end else begin
-      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(2)), 22)]));
+      Status(Format(ID_RULE_NOT_FOUND, [CutStr(ExtractFileName(ParamStr(UnblockParam)), 22)]));
       Result:='%MISSING%';
     end;
+
+  // Import
+  end else if (ImportParam > 0) and (AnsiLowerCase(ExtractFileExt(ParamStr(ImportParam))) = '.fer') then begin
+    ImportRules(ParamStr(ImportParam));
+    Result:='%IMPORTED%';
+
+  // Export
+  end else if (ExportParam > 0) and (AnsiLowerCase(ExtractFileExt(ParamStr(ExportParam))) = '.fer') then
+    ExportRules(ParamStr(ExportParam));
+
+  // Silent
+  if Silent then begin
+    CloseApplication:=true;
+    Result:='';
   end;
 end;
 
@@ -408,26 +439,30 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu;
+procedure TMain.ContextMenu(Recreate: boolean);
+const
+  RegKey = '\exefile\shell\' + AppID;
 var
   Reg: TRegistry;
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
-  if (Reg.OpenKeyReadOnly('\exefile\shell\' + APPLICATION_ID) = false) and (Reg.OpenKey('\exefile\shell\' + APPLICATION_ID, true)) then begin
+  if Recreate and Reg.KeyExists(RegKey) then
+    Reg.DeleteKey(RegKey);
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and (Reg.OpenKey(RegKey, true)) then begin
     Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block', true);
+    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Block', true);
     Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" /block "%1"');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock', true);
+    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Block\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" -b "%1"');
+    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey('\exefile\shell\' + APPLICATION_ID + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" /unblock "%1"');
+    Reg.OpenKey('\exefile\shell\' + AppID + '\Shell\Unblock\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" -u "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
@@ -438,6 +473,8 @@ var
   WND: HWND;
   Ini: TIniFile;
   LangFileName, Event: string;
+  Reg: TRegistry;
+  IsDifferent: boolean;
 begin
   // Translate / Перевод
   LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
@@ -466,6 +503,7 @@ begin
   FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', ''));
   CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
 
+  ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
   ID_RULES_SUCCESSFULLY_EXPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_EXPORTED', ''));
   ID_RULE_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_CREATED', ''));
   ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', ''));
@@ -486,24 +524,35 @@ begin
   ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
   Ini.Free;
 
-  ContextMenu;
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CURRENT_USER;
+  if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
+    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
+    ContextMenu(IsDifferent);
+    Reg.WriteString('Path', ParamStr(0));
+    Reg.WriteString('Version', AppVersion);
+    Reg.CloseKey;
+  end;
+  Reg.Free;
+
   DragAndDrop;
   RuleNames:=TStringList.Create;
   RulePaths:=TStringList.Create;
 
   LoadRegRules;
 
-  Event:=HandleParams;
-  if Event <> '' then begin
-    WND:=FindWindow('TMain', APPLICATION_NAME);
-    if WND <> 0 then begin
-      CloseDuplicate:=true;
-      SendMessageToHandle(WND, Event);
-    end;
+  Event:=HandleParams();
+  WND:=FindWindow('TMain', AppName);
+  if WND <> 0 then begin
+    if Event <> '' then
+      SendMessageToHandle(WND, Event)
+    else
+      SetForegroundWindow(WND);
+    CloseApplication:=true;
   end;
 
-  if CloseDuplicate = false then
-    Caption:=APPLICATION_NAME;
+  if CloseApplication = false then
+    Caption:=AppName;
   Application.Title:=Caption;
 end;
 
@@ -533,7 +582,7 @@ end;
 procedure TMain.FormShow(Sender: TObject);
 begin
   ListView.SetFocus;
-  if CloseDuplicate then Close;
+  if CloseApplication then Close;
 end;
 
 procedure TMain.ListViewKeyUp(Sender: TObject; var Key: Word;
@@ -564,7 +613,9 @@ begin
   end else if (Receiver = '%EXISTS%') or (Receiver = '%ABSENT%') then
     Status(ID_FAILED_CREATE_RULES)
   else if Receiver = '%MISSING%' then
-    Status(ID_FAILED_REMOVE_RULES);
+    Status(ID_FAILED_REMOVE_RULES)
+  else if Receiver = '%IMPORTED%' then
+    CheckBtn.Click;
 
   Msg.Result:=Integer(True);
 end;
@@ -652,39 +703,21 @@ begin
 end;
 
 procedure TMain.ImportBtnClick(Sender: TObject);
-var
-  ImportRulesList: TStringList; i: integer;
 begin
-  if (ImportDialog.Execute) and (FileExists(ImportDialog.FileName)) then begin
-    CheckBtn.Click;
-    ImportRulesList:=TStringList.Create;
-    ImportRulesList.LoadFromFile(ImportDialog.FileName);
-
-    BlockedCount:=0;
-    for i:=0 to ImportRulesList.Count - 1 do
-      if Pos(ImportRulesList.Strings[i], RulePaths.Text) = 0 then begin
-        AddRulesForApp(ImportRulesList.Strings[i]);
-        Inc(BlockedCount);
-      end;
-
-    Status(ID_RULES_SUCCESSFULLY_CREATED + ' ' + IntToStr(BlockedCount));
-
-    ImportRulesList.Free;
-  end;
+  if ImportDialog.Execute then
+    ImportRules(ImportDialog.FileName);
 end;
 
 procedure TMain.ExportBtnClick(Sender: TObject);
 begin
-  if (ExportDialog.Execute) and (RulePaths.Count > 0) then begin
-    RulePaths.SaveToFile(ExportDialog.FileName);
-    Status(ID_RULES_SUCCESSFULLY_EXPORTED);
-  end;
+  if ExportDialog.Execute then
+    ExportRules(ExportDialog.FileName);
 end;
 
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(Caption + ' 0.8.1' + #13#10 +
-  ID_LAST_UPDATE + ' 03.06.25' + #13#10 +
+  Application.MessageBox(PChar(Caption + ' ' + AppVersion + #13#10 +
+  ID_LAST_UPDATE + ' 17.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
@@ -707,6 +740,36 @@ end;
 procedure TMain.RemBtn2Click(Sender: TObject);
 begin
   RemBtn.Click;
+end;
+
+function TMain.ExportRules(const FilePath: string): boolean;
+begin
+  if RulePaths.Count > 0 then begin
+    RulePaths.SaveToFile(FilePath);
+    Status(ID_RULES_SUCCESSFULLY_EXPORTED);
+  end;
+end;
+
+procedure TMain.ImportRules(const FilePath: string);
+var
+  ImportRulesList: TStringList; i: integer;
+begin
+  if FileExists(FilePath) then begin
+    CheckBtn.Click;
+    ImportRulesList:=TStringList.Create;
+    ImportRulesList.LoadFromFile(FilePath);
+
+    BlockedCount:=0;
+    for i:=0 to ImportRulesList.Count - 1 do
+      if Pos(ImportRulesList.Strings[i], RulePaths.Text) = 0 then begin
+        AddRulesForApp(ImportRulesList.Strings[i]);
+        Inc(BlockedCount);
+      end;
+
+    Status(ID_RULES_SUCCESSFULLY_IMPORTED);
+
+    ImportRulesList.Free;
+  end;
 end;
 
 end.

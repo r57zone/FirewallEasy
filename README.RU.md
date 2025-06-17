@@ -22,6 +22,8 @@
 ![flag-italy](https://github.com/user-attachments/assets/692490d6-bc53-446f-99b8-bf2becb8ec0d)
 ![flag-north-korea](https://github.com/user-attachments/assets/5b315a3d-6ce0-4cbb-b7a3-133ef2bcb2c5)
 ![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
+![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
+![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
 
 ## Особенности
 - **Блокировка доступа в два клика**<br>
@@ -32,10 +34,14 @@
 
 Перенесите программы в интерфейс "Firewall Easy" и доступ в интернет им будет заблокирован.
 - **Аргументы командной строки**
- ```batch
- FirewallEasy.exe /block "C:\Path\To\App.exe"
- FirewallEasy.exe /unblock "C:\Path\To\App.exe"
- ```
+
+| Команда                                 | Описание                                       |
+|-----------------------------------------|------------------------------------------------|
+| `FirewallEasy.exe -b "C:\Program Files\App\App.exe"` | Блокировка доступа приложению в интернет |
+| `FirewallEasy.exe -u "C:\Program Files\App\App.exe"` | Разблокировать доступ приложению |
+| `FirewallEasy.exe -i "C:\Rules.fer"` | Импортировать правила из файла |
+| `FirewallEasy.exe -e "C:\Rules.fer"` | Экспортировать текущие правила в файл |
+| `FirewallEasy.exe -s` | Тихий режим (закрытие после выполнения) |
 
 Вызывайте функции для блокировки или разблокировки доступа приложений к Интернету через CLI или скрипты.
 

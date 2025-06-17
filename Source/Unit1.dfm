@@ -43,7 +43,7 @@ object Main: TMain
     Left = 167
     Top = 271
     Width = 75
-    Height = 25
+    Height = 26
     Caption = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '
     TabOrder = 3
     OnClick = CheckBtnClick

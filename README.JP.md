@@ -23,6 +23,7 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
 ![flag-italy](https://github.com/user-attachments/assets/692490d6-bc53-446f-99b8-bf2becb8ec0d)
 ![flag-north-korea](https://github.com/user-attachments/assets/5b315a3d-6ce0-4cbb-b7a3-133ef2bcb2c5)
 ![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
+![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
 
 ## 特徴
 - **ワンクリックでアクセスをブロック**<br>
@@ -33,12 +34,15 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
 
 「Firewall Easy」のウィンドウにドラッグ&ドロップで対象のアプリケーションのインターネット接続をブロックする事が可能です。
 - **コマンドライン引数**
- ```batch
- FirewallEasy.exe /block "C:\Path\To\App.exe"
- FirewallEasy.exe /unblock "C:\Path\To\App.exe"
- ```
+| コマンド                                              | 説明                                               |
+|-------------------------------------------------------|----------------------------------------------------|
+| `FirewallEasy.exe -b "C:\Program Files\App\App.exe"`  | アプリのインターネットアクセスをブロックする       |
+| `FirewallEasy.exe -u "C:\Program Files\App\App.exe"`  | アプリのインターネットアクセスを許可する           |
+| `FirewallEasy.exe -i "C:\Rules.fer"`                  | ファイルからルールをインポートする                 |
+| `FirewallEasy.exe -e "C:\Rules.fer"`                  | 現在のルールをファイルにエクスポートする           |
+| `FirewallEasy.exe -s`                                 | サイレントモード（実行後に自動終了）              |
 
-コマンドラインやスクリプトを通じて、アプリケーションのインターネットアクセスをブロックまたは解除する機能を呼び出します。
+CLIまたはスクリプト経由で、アプリのインターネットアクセスをブロック／解除する機能を呼び出せます。
 
 ## スクリーンショット
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)

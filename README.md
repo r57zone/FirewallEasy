@@ -23,6 +23,7 @@ The following languages ​​are supported: English, Russian, Chinese (Traditio
 ![flag-italy](https://github.com/user-attachments/assets/692490d6-bc53-446f-99b8-bf2becb8ec0d)
 ![flag-north-korea](https://github.com/user-attachments/assets/5b315a3d-6ce0-4cbb-b7a3-133ef2bcb2c5)
 ![flag-south-korea](https://github.com/user-attachments/assets/ed3d3778-9193-444a-85fd-ac5dd7bc91c6)
+![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
 
 ## Features
 - **Blocking access in a single click**<br>
@@ -33,12 +34,15 @@ Right-click on a program to block or unblock its internet access.
 
 Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
 - **Command Line Arguments**
- ```batch
- FirewallEasy.exe /block "C:\Path\To\App.exe"
- FirewallEasy.exe /unblock "C:\Path\To\App.exe"
- ```
+| Command                                              | Description                                     |
+|------------------------------------------------------|-------------------------------------------------|
+| `FirewallEasy.exe -b "C:\Program Files\App\App.exe"` | Block internet access for the application       |
+| `FirewallEasy.exe -u "C:\Program Files\App\App.exe"` | Unblock internet access for the application     |
+| `FirewallEasy.exe -i "C:\Rules.fer"`                 | Import rules from file                          |
+| `FirewallEasy.exe -e "C:\Rules.fer"`                 | Export current rules to file                    |
+| `FirewallEasy.exe -s`                                | Silent mode (exit after execution)              |
 
-Invoke the functions to block or unblock applications from accessing the internet via clis or scripts.
+Use these commands to block or unblock application access to the internet via CLI or scripts.
 
 ## Screenshot
 ![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)
