@@ -34,13 +34,14 @@ Right-click on a program to block or unblock its internet access.
 
 Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
 - **Command Line Arguments**
+
 | Command                                              | Description                                     |
 |------------------------------------------------------|-------------------------------------------------|
-| `FirewallEasy.exe -b "C:\Program Files\App\App.exe"` | Block internet access for the application       |
-| `FirewallEasy.exe -u "C:\Program Files\App\App.exe"` | Unblock internet access for the application     |
-| `FirewallEasy.exe -i "C:\Rules.fer"`                 | Import rules from file                          |
-| `FirewallEasy.exe -e "C:\Rules.fer"`                 | Export current rules to file                    |
-| `FirewallEasy.exe -s`                                | Silent mode (exit after execution)              |
+| `FirewallEasy.exe -b "C:\Program Files\App\App.exe"` | Block internet access for the application |
+| `FirewallEasy.exe -u "C:\Program Files\App\App.exe"` | Unblock internet access for the application |
+| `FirewallEasy.exe -i "C:\Rules.fer"` | Import rules from file |
+| `FirewallEasy.exe -e "C:\Rules.fer"` | Export current rules to file |
+| `FirewallEasy.exe -s` | Silent mode (exit after execution) |
 
 Use these commands to block or unblock application access to the internet via CLI or scripts.
 
