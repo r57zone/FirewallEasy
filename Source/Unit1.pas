@@ -354,8 +354,8 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i, BlockParam, UnblockParam, ImportParam, ExportParam: integer;
   Silent: boolean;
+  i, BlockParam, UnblockParam, ImportParam, ExportParam: integer;
 begin
   if ParamCount < 1 then Exit;
 
@@ -366,15 +366,15 @@ begin
   ExportParam:=0;
 
   for i:=1 to ParamCount do begin
-    if (AnsiLowerCase(ParamStr(i)) = '-b') or (AnsiLowerCase(ParamStr(i)) = '-block') then
+    if (AnsiLowerCase(ParamStr(i)) = '-b') or (AnsiLowerCase(ParamStr(i)) = '--block') then
       BlockParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-u') or (AnsiLowerCase(ParamStr(i)) = '-unblock') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-u') or (AnsiLowerCase(ParamStr(i)) = '--unblock') then
       UnblockParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-i') or (AnsiLowerCase(ParamStr(i)) = '-import') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-i') or (AnsiLowerCase(ParamStr(i)) = '--import') then
       ImportParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-e') or (AnsiLowerCase(ParamStr(i)) = '-export') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-e') or (AnsiLowerCase(ParamStr(i)) = '--export') then
       ExportParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-s') or (AnsiLowerCase(ParamStr(i)) = '-silent') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-s') or (AnsiLowerCase(ParamStr(i)) = '--silent') then
       Silent:=true;
   end;
 
@@ -457,12 +457,12 @@ begin
     Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',1');
     Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" -b "%1"');
+    Reg.WriteString('', '"' + ParamStr(0) + '" --block "%1"');
     Reg.OpenKey(RegKey + '\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',2');
     Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" -u "%1"');
+    Reg.WriteString('', '"' + ParamStr(0) + '" --unblock "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
