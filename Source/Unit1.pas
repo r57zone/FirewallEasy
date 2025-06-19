@@ -66,6 +66,8 @@ type
     procedure SyncAppInfo;
     procedure DragAndDrop;
     procedure ContextMenu(Recreate: boolean);
+    procedure FileExtension(Recreate: boolean);
+    procedure FileAssociation(Recreate: boolean);
     { Private declarations }
   public
     procedure ImportRules(const FilePath: string);
@@ -443,6 +445,8 @@ begin
     end;
     Reg.CloseKey;
     ContextMenu(IsDifferent);
+    FileExtension(IsDifferent);
+    FileAssociation(IsDifferent);
   end;
   Reg.Free;
 end;
@@ -469,7 +473,7 @@ begin
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if Recreate and Reg.KeyExists(RegKey) then
     Reg.DeleteKey(RegKey);
-  if (Reg.OpenKeyReadOnly(RegKey) = false) and (Reg.OpenKey(RegKey, true)) then begin
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
     Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
@@ -483,6 +487,43 @@ begin
     Reg.WriteString('Icon', ParamStr(0) + ',2');
     Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" --unblock "%1"');
+  end;
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure TMain.FileExtension(Recreate: boolean);
+const
+  RegKey = '\.fer';
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CLASSES_ROOT;
+  if Recreate and Reg.KeyExists(RegKey) then
+    Reg.DeleteKey(RegKey);
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then
+    Reg.WriteString('', AppID + '.rules');
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure TMain.FileAssociation(Recreate: boolean);
+const
+  RegKey = '\' + AppID + '.rules';
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CLASSES_ROOT;
+  if Recreate and Reg.KeyExists(RegKey) then
+    Reg.DeleteKey(RegKey);
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
+    Reg.WriteString('', AppName + ' Rules File');
+    Reg.OpenKey(RegKey + '\Shell\Open\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" --import "%1"');
+    Reg.OpenKey(RegKey + '\DefaultIcon', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '",0');
   end;
   Reg.CloseKey;
   Reg.Free;
