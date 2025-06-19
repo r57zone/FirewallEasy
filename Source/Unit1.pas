@@ -71,7 +71,7 @@ type
     { Private declarations }
   public
     procedure ImportRules(const FilePath: string);
-    function ExportRules(const FilePath: string): boolean;
+    procedure ExportRules(const FilePath: string);
     { Public declarations }
   end;
 
@@ -520,10 +520,10 @@ begin
     Reg.DeleteKey(RegKey);
   if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
     Reg.WriteString('', AppName + ' Rules File');
-    Reg.OpenKey(RegKey + '\Shell\Open\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" --import "%1"');
     Reg.OpenKey(RegKey + '\DefaultIcon', true);
     Reg.WriteString('', '"' + ParamStr(0) + '",0');
+    Reg.OpenKey(RegKey + '\Shell\Open\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" --import "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
@@ -792,7 +792,7 @@ begin
   RemBtn.Click;
 end;
 
-function TMain.ExportRules(const FilePath: string): boolean;
+procedure TMain.ExportRules(const FilePath: string);
 begin
   if RulePaths.Count > 0 then begin
     RulePaths.SaveToFile(FilePath);
