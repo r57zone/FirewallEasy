@@ -63,12 +63,15 @@ type
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
     function HandleParams: string;
+    procedure SyncAppInfo;
     procedure DragAndDrop;
     procedure ContextMenu(Recreate: boolean);
+    procedure FileExtension(Recreate: boolean);
+    procedure FileAssociation(Recreate: boolean);
     { Private declarations }
   public
     procedure ImportRules(const FilePath: string);
-    function ExportRules(const FilePath: string): boolean;
+    procedure ExportRules(const FilePath: string);
     { Public declarations }
   end;
 
@@ -90,7 +93,7 @@ var
 const
   AppName = 'Firewall Easy';
   AppID = 'FirewallEasy';
-  AppVersion = '0.8.3';
+  AppVersion = '0.8.4';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -354,8 +357,8 @@ end;
 
 function TMain.HandleParams: string;
 var
-  i, BlockParam, UnblockParam, ImportParam, ExportParam: integer;
   Silent: boolean;
+  i, BlockParam, UnblockParam, ImportParam, ExportParam: integer;
 begin
   if ParamCount < 1 then Exit;
 
@@ -366,15 +369,15 @@ begin
   ExportParam:=0;
 
   for i:=1 to ParamCount do begin
-    if (AnsiLowerCase(ParamStr(i)) = '-b') or (AnsiLowerCase(ParamStr(i)) = '-block') then
+    if (AnsiLowerCase(ParamStr(i)) = '-b') or (AnsiLowerCase(ParamStr(i)) = '--block') then
       BlockParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-u') or (AnsiLowerCase(ParamStr(i)) = '-unblock') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-u') or (AnsiLowerCase(ParamStr(i)) = '--unblock') then
       UnblockParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-i') or (AnsiLowerCase(ParamStr(i)) = '-import') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-i') or (AnsiLowerCase(ParamStr(i)) = '--import') then
       ImportParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-e') or (AnsiLowerCase(ParamStr(i)) = '-export') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-e') or (AnsiLowerCase(ParamStr(i)) = '--export') then
       ExportParam:=i + 1
-    else if (AnsiLowerCase(ParamStr(i)) = '-s') or (AnsiLowerCase(ParamStr(i)) = '-silent') then
+    else if (AnsiLowerCase(ParamStr(i)) = '-s') or (AnsiLowerCase(ParamStr(i)) = '--silent') then
       Silent:=true;
   end;
 
@@ -427,6 +430,27 @@ begin
   end;
 end;
 
+procedure TMain.SyncAppInfo;
+var
+  Reg: TRegistry;
+  IsDifferent: boolean;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_LOCAL_MACHINE;
+  if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
+    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
+    if IsDifferent then begin
+      Reg.WriteString('Path', ParamStr(0));
+      Reg.WriteString('Version', AppVersion);
+    end;
+    Reg.CloseKey;
+    ContextMenu(IsDifferent);
+    FileExtension(IsDifferent);
+    FileAssociation(IsDifferent);
+  end;
+  Reg.Free;
+end;
+
 procedure TMain.DragAndDrop;
 var
   Reg: TRegistry;
@@ -449,7 +473,7 @@ begin
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if Recreate and Reg.KeyExists(RegKey) then
     Reg.DeleteKey(RegKey);
-  if (Reg.OpenKeyReadOnly(RegKey) = false) and (Reg.OpenKey(RegKey, true)) then begin
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
     Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
     Reg.WriteString('Icon', ParamStr(0) + ',0');
     Reg.WriteString('SubCommands', '');
@@ -457,12 +481,49 @@ begin
     Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',1');
     Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" -b "%1"');
+    Reg.WriteString('', '"' + ParamStr(0) + '" --block "%1"');
     Reg.OpenKey(RegKey + '\Shell\Unblock', true);
     Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
     Reg.WriteString('Icon', ParamStr(0) + ',2');
     Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" -u "%1"');
+    Reg.WriteString('', '"' + ParamStr(0) + '" --unblock "%1"');
+  end;
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure TMain.FileExtension(Recreate: boolean);
+const
+  RegKey = '\.fer';
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CLASSES_ROOT;
+  if Recreate and Reg.KeyExists(RegKey) then
+    Reg.DeleteKey(RegKey);
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then
+    Reg.WriteString('', AppID + '.rules');
+  Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure TMain.FileAssociation(Recreate: boolean);
+const
+  RegKey = '\' + AppID + '.rules';
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CLASSES_ROOT;
+  if Recreate and Reg.KeyExists(RegKey) then
+    Reg.DeleteKey(RegKey);
+  if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
+    Reg.WriteString('', AppName + ' Rules File');
+    Reg.OpenKey(RegKey + '\DefaultIcon', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '",3');
+    Reg.OpenKey(RegKey + '\Shell\Open\Command', true);
+    Reg.WriteString('', '"' + ParamStr(0) + '" --import "%1"');
   end;
   Reg.CloseKey;
   Reg.Free;
@@ -473,8 +534,6 @@ var
   WND: HWND;
   Ini: TIniFile;
   LangFileName, Event: string;
-  Reg: TRegistry;
-  IsDifferent: boolean;
 begin
   // Translate / Перевод
   LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
@@ -524,20 +583,9 @@ begin
   ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
   Ini.Free;
 
-  Reg:=TRegistry.Create;
-  Reg.RootKey:=HKEY_CURRENT_USER;
-  if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
-    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
-    ContextMenu(IsDifferent);
-    if IsDifferent then begin
-      Reg.WriteString('Path', ParamStr(0));
-      Reg.WriteString('Version', AppVersion);
-    end;
-    Reg.CloseKey;
-  end;
-  Reg.Free;
-
+  SyncAppInfo;
   DragAndDrop;
+
   RuleNames:=TStringList.Create;
   RulePaths:=TStringList.Create;
 
@@ -744,7 +792,7 @@ begin
   RemBtn.Click;
 end;
 
-function TMain.ExportRules(const FilePath: string): boolean;
+procedure TMain.ExportRules(const FilePath: string);
 begin
   if RulePaths.Count > 0 then begin
     RulePaths.SaveToFile(FilePath);
