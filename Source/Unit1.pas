@@ -93,7 +93,7 @@ var
 const
   AppName = 'Firewall Easy';
   AppID = 'FirewallEasy';
-  AppVersion = '0.8.3';
+  AppVersion = '0.8.4';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
