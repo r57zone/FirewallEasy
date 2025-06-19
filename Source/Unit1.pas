@@ -434,7 +434,7 @@ var
   IsDifferent: boolean;
 begin
   Reg:=TRegistry.Create;
-  Reg.RootKey:=HKEY_CURRENT_USER;
+  Reg.RootKey:=HKEY_LOCAL_MACHINE;
   if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
     IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
     if IsDifferent then begin
