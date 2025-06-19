@@ -63,6 +63,7 @@ type
     procedure LoadRegRules;
     procedure WMCopyData(var Msg: TWMCopyData); message WM_COPYDATA;
     function HandleParams: string;
+    procedure SyncAppInfo;
     procedure DragAndDrop;
     procedure ContextMenu(Recreate: boolean);
     { Private declarations }
@@ -427,6 +428,25 @@ begin
   end;
 end;
 
+procedure TMain.SyncAppInfo;
+var
+  Reg: TRegistry;
+  IsDifferent: boolean;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_CURRENT_USER;
+  if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
+    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
+    if IsDifferent then begin
+      Reg.WriteString('Path', ParamStr(0));
+      Reg.WriteString('Version', AppVersion);
+    end;
+    Reg.CloseKey;
+    ContextMenu(IsDifferent);
+  end;
+  Reg.Free;
+end;
+
 procedure TMain.DragAndDrop;
 var
   Reg: TRegistry;
@@ -473,8 +493,6 @@ var
   WND: HWND;
   Ini: TIniFile;
   LangFileName, Event: string;
-  Reg: TRegistry;
-  IsDifferent: boolean;
 begin
   // Translate / Перевод
   LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
@@ -524,20 +542,9 @@ begin
   ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
   Ini.Free;
 
-  Reg:=TRegistry.Create;
-  Reg.RootKey:=HKEY_CURRENT_USER;
-  if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
-    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
-    ContextMenu(IsDifferent);
-    if IsDifferent then begin
-      Reg.WriteString('Path', ParamStr(0));
-      Reg.WriteString('Version', AppVersion);
-    end;
-    Reg.CloseKey;
-  end;
-  Reg.Free;
-
+  SyncAppInfo;
   DragAndDrop;
+
   RuleNames:=TStringList.Create;
   RulePaths:=TStringList.Create;
 
