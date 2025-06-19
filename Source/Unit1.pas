@@ -521,7 +521,7 @@ begin
   if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
     Reg.WriteString('', AppName + ' Rules File');
     Reg.OpenKey(RegKey + '\DefaultIcon', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '",0');
+    Reg.WriteString('', '"' + ParamStr(0) + '",3');
     Reg.OpenKey(RegKey + '\Shell\Open\Command', true);
     Reg.WriteString('', '"' + ParamStr(0) + '" --import "%1"');
   end;
