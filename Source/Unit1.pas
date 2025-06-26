@@ -74,14 +74,14 @@ type
     function HandleParams: string;
     procedure SyncAppInfo;
     procedure DragAndDrop;
-    procedure FileExtension(Recreate: boolean);
-    procedure FileAssociation(Recreate: boolean);
+    procedure FileExtension(const Recreate: boolean);
+    procedure FileAssociation(const Recreate: boolean);
     { Private declarations }
   public
     CompactContextMenu: boolean;
     procedure ImportRules(const FilePath: string);
     procedure ExportRules(const FilePath: string);
-    procedure ContextMenu(Recreate, CompactMode: boolean);
+    procedure ContextMenu(const Recreate, CompactMode: boolean);
     { Public declarations }
   end;
 
@@ -90,6 +90,7 @@ var
   RuleNames, RulePaths: TStringList;
   CloseApplication: boolean;
   BlockedCount, UnblockedCount: integer;
+  SystemLang: string;
 
   // Tranlate / Перевод
   ID_SEARCH: string;
@@ -455,7 +456,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu(Recreate, CompactMode: boolean);
+procedure TMain.ContextMenu(const Recreate, CompactMode: boolean);
 const
   RegKey = '\exefile\shell\' + AppID;
 var
@@ -501,8 +502,9 @@ var
   LangFileName, Event: string;
 begin
   // Translate / Перевод
-  LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
-  if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
+  SystemLang:=GetLocaleInformation(LOCALE_SENGLANGUAGE);
+  LangFileName:=SystemLang + '.ini';
+  if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName) then
     LangFileName:='English.Ini';
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
@@ -801,7 +803,7 @@ begin
   end;
 end;
 
-procedure TMain.FileAssociation(Recreate: boolean);
+procedure TMain.FileAssociation(const Recreate: boolean);
 const
   RegKey = '\' + AppID + '.rules';
 var
@@ -822,7 +824,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.FileExtension(Recreate: boolean);
+procedure TMain.FileExtension(const Recreate: boolean);
 const
   RegKey = '\.fer';
 var
@@ -847,10 +849,11 @@ begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
   if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
-    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion);
+    IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion) or (Reg.ReadString('Language') <> SystemLang);
     if IsDifferent then begin
       Reg.WriteString('Path', ParamStr(0));
       Reg.WriteString('Version', AppVersion);
+      Reg.WriteString('Language', SystemLang);
     end;
     Reg.CloseKey;
   end;
