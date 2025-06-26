@@ -7,7 +7,7 @@
 Firewall Easyは、Windowsファイアウォールでアプリケーションのインターネット接続のブロックを簡易的に行えるようにします。
 
 
-サポートされている言語は以下の通りです：英語、ロシア語、中国語（繁体字）、スペイン語、ポルトガル語（ブラジルポルトガル語）、フランス語、ドイツ語、日本語、アラビア語、イタリア語、韓国語、トルコ語、ポーランド語。
+対応言語: 英語、ロシア語、中国語（簡体字）、中国語（繁体字）、スペイン語、ポルトガル語（ブラジル）、フランス語、ドイツ語、日本語、アラビア語、イタリア語、韓国語、トルコ語、ポーランド語。
 
 ![flag-united-kingdom](https://github.com/user-attachments/assets/8c03c9b8-d154-466f-b9c4-6ea60278d537)
 ![flag-russia](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)
@@ -27,26 +27,26 @@ Firewall Easyは、Windowsファイアウォールでアプリケーションの
 ![flag-poland](https://github.com/user-attachments/assets/e94d2b22-8d24-4421-a64a-582e02297e96)
 
 ## 特徴
-**• ワンクリックでアクセスをブロック**<br>
-![](https://github.com/user-attachments/assets/29c8e921-2dcb-40aa-91a1-854dc82305c3)<br>
+**• 数回のクリックでインターネットアクセスをブロック**<br>
+![](https://github.com/user-attachments/assets/4e576903-5ba9-4cce-8b28-63ce2108d1cc)<br>
 右クリックで対象のアプリケーションのインターネット接続をブロックする事が可能です。
 
 **• ドラッグ&ドロップをサポート**<br>
 「Firewall Easy」のウィンドウにドラッグ&ドロップで対象のアプリケーションのインターネット接続をブロックする事が可能です。
 
 **• コマンドライン引数**<br>
-| コマンド                                                 | 説明                                               |
-|-------------------------------------------------------|----------------------------------------------------|
-| `FirewallEasy.exe -b "C:\Program Files\App\App.exe"` | アプリのインターネットアクセスをブロックする |
-| `FirewallEasy.exe -u "C:\Program Files\App\App.exe"` | アプリのインターネットアクセスを許可する |
-| `FirewallEasy.exe -i "C:\Rules.fer"` | ファイルからルールをインポートする |
-| `FirewallEasy.exe -e "C:\Rules.fer"` | 現在のルールをファイルにエクスポートする |
-| `FirewallEasy.exe -s` | サイレントモード（実行後に自動終了） |
+| 説明 | 短縮コマンド | 完全なコマンド |
+|------|-----------|-------------|
+| アプリのインターネットアクセスをブロックする | `-b "App.exe"` | `--block "App.exe"` |
+| アプリのインターネットアクセスを解除する | `-u "App.exe"` | `--unblock "App.exe"` |
+| ファイルからルールをインポートする | `-i "Rules.fer"` | `--import "Rules.fer"` |
+| 現在のルールをファイルにエクスポートする | `-e "Rules.fer"` | `--export "Rules.fer"` |
+| サイレントモード（実行後に自動終了） | `-s` | `--silent` |
 
-CLIまたはスクリプト経由で、アプリのインターネットアクセスをブロック／解除する機能を呼び出せます。
+アプリのインターネットアクセスをブロックまたは解除するには、コマンドラインやスクリプトを使用してください。
 
 ## スクリーンショット
-![](https://github.com/r57zone/FirewallEasy/assets/9499881/f9770084-5913-42ad-9aff-764379bf0104)
+![](https://github.com/user-attachments/assets/c5746b70-69a4-4f78-9319-e48ed713aad6)
 
 ## ダウンロード
 >Version for Windows 7, 8.1, 10, 11.

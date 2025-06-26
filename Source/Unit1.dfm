@@ -43,7 +43,7 @@ object Main: TMain
     Left = 167
     Top = 271
     Width = 75
-    Height = 26
+    Height = 25
     Caption = #1055#1088#1086#1074#1077#1088#1080#1090#1100' '
     TabOrder = 3
     OnClick = CheckBtnClick
@@ -57,14 +57,14 @@ object Main: TMain
     TabOrder = 4
     OnClick = FirewallBtnClick
   end
-  object CloseBtn: TButton
+  object CloseBtn2: TButton
     Left = 327
     Top = 271
     Width = 75
     Height = 25
     Caption = #1042#1099#1093#1086#1076
     TabOrder = 5
-    OnClick = CloseBtnClick
+    OnClick = CloseBtn2Click
   end
   object SearchEdt: TEdit
     Left = 8
@@ -135,8 +135,8 @@ object Main: TMain
   object MainMenu1: TMainMenu
     Left = 16
     Top = 32
-    object RulesItem: TMenuItem
-      Caption = #1055#1088#1072#1074#1080#1083#1072
+    object FileBtn: TMenuItem
+      Caption = #1060#1072#1081#1083
       object ImportBtn: TMenuItem
         Caption = #1048#1084#1087#1086#1088#1090
         OnClick = ImportBtnClick
@@ -145,12 +145,33 @@ object Main: TMain
         Caption = #1069#1082#1089#1087#1086#1088#1090
         OnClick = ExportBtnClick
       end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object SettingsBtn: TMenuItem
+        Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
+        OnClick = SettingsBtnClick
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object CloseBtn: TMenuItem
+        Caption = #1042#1099#1093#1086#1076
+        OnClick = CloseBtnClick
+      end
     end
-    object HelpItem: TMenuItem
+    object HelpBtn: TMenuItem
       Caption = #1057#1087#1088#1072#1074#1082#1072
       object AboutBtn: TMenuItem
         Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077'...'
         OnClick = AboutBtnClick
+      end
+      object N3: TMenuItem
+        Caption = '-'
+      end
+      object CMDOptions: TMenuItem
+        Caption = #1050#1083#1102#1095#1080' '#1079#1072#1087#1091#1089#1082#1072
+        OnClick = CMDOptionsClick
       end
     end
   end

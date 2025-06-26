@@ -13,25 +13,31 @@ type
     RemBtn: TButton;
     CheckBtn: TButton;
     FirewallBtn: TButton;
-    CloseBtn: TButton;
+    CloseBtn2: TButton;
     OpenDialog: TOpenDialog;
     SearchEdt: TEdit;
     StatusBar: TStatusBar;
     ImportDialog: TOpenDialog;
     ExportDialog: TSaveDialog;
     MainMenu1: TMainMenu;
-    RulesItem: TMenuItem;
+    FileBtn: TMenuItem;
     ImportBtn: TMenuItem;
     ExportBtn: TMenuItem;
-    HelpItem: TMenuItem;
+    HelpBtn: TMenuItem;
     AboutBtn: TMenuItem;
     ListView: TListView;
     PopupMenu: TPopupMenu;
     RemBtn2: TMenuItem;
+    N1: TMenuItem;
+    SettingsBtn: TMenuItem;
+    N2: TMenuItem;
+    CloseBtn: TMenuItem;
+    N3: TMenuItem;
+    CMDOptions: TMenuItem;
     procedure AddBtnClick(Sender: TObject);
     procedure RemBtnClick(Sender: TObject);
     procedure FirewallBtnClick(Sender: TObject);
-    procedure CloseBtnClick(Sender: TObject);
+    procedure CloseBtn2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure CheckBtnClick(Sender: TObject);
@@ -56,6 +62,9 @@ type
     procedure ListViewKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure RemBtn2Click(Sender: TObject);
+    procedure CloseBtnClick(Sender: TObject);
+    procedure SettingsBtnClick(Sender: TObject);
+    procedure CMDOptionsClick(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
     procedure Status(const Content: string = '');
@@ -65,13 +74,14 @@ type
     function HandleParams: string;
     procedure SyncAppInfo;
     procedure DragAndDrop;
-    procedure ContextMenu(const Recreate: boolean);
     procedure FileAssociation(const Recreate: boolean);
     procedure FileExtension(const Recreate: boolean);
     { Private declarations }
   public
+    CompactContextMenu: boolean;
     procedure ImportRules(const FilePath: string);
     procedure ExportRules(const FilePath: string);
+    procedure ContextMenu(const Recreate, CompactMode: boolean);
     { Public declarations }
   end;
 
@@ -81,14 +91,15 @@ var
   CloseApplication: boolean;
   BlockedCount, UnblockedCount: integer;
 
-  // Tranlate / Перевод
+  // Tranlate / ГЏГҐГ°ГҐГўГ®Г¤
   AppLang, ID_SEARCH: string;
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
   ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
-  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS,
+  ID_UNBLOCK_ACCESS, ID_UNBLOCK_ACCESS_CONTEXT_MENU, ID_APPLY, ID_CANCEL, ID_COMMAND_LINE_OPTIONS_TEXT: string;
 
 const
   AppName = 'Firewall Easy';
@@ -98,10 +109,12 @@ const
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
 
-  NET_FW_RULE_DIR_IN = 1;   // IN  - incoming connections / входящие соединения
-  NET_FW_RULE_DIR_OUT = 2;  // OUT - outgoing / исходящие
+  NET_FW_RULE_DIR_IN = 1;   // IN  - incoming connections / ГўГµГ®Г¤ГїГ№ГЁГҐ Г±Г®ГҐГ¤ГЁГ­ГҐГ­ГЁГї
+  NET_FW_RULE_DIR_OUT = 2;  // OUT - outgoing / ГЁГ±ГµГ®Г¤ГїГ№ГЁГҐ
 
 implementation
+
+uses Unit2;
 
 {$R *.dfm}
 {$R Icons.res}
@@ -134,23 +147,23 @@ var
   Profile: integer;
   NewRule: OleVariant;
 begin
-  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; // Профили
+  Profile:=NET_FW_PROFILE2_PRIVATE or NET_FW_PROFILE2_PUBLIC or NET_FW_PROFILE2_DOMAIN; // ГЏГ°Г®ГґГЁГ«ГЁ
   fwPolicy2:=CreateOleObject('HNetCfg.FwPolicy2');
   RulesObject:=fwPolicy2.Rules;
   NewRule:=CreateOleObject('HNetCfg.FWRule');
   NewRule.Name:=Caption;
   NewRule.Description:=Caption;
   NewRule.Applicationname:=Executable;
-  NewRule.Protocol:=NET_FW_IP_PROTOCOL; // Протоколы
-  NewRule.Direction:=NET_FW_RULE_DIR; // incoming connections, outgoing / Входящие и исходящие соединения
+  NewRule.Protocol:=NET_FW_IP_PROTOCOL; // ГЏГ°Г®ГІГ®ГЄГ®Г«Г»
+  NewRule.Direction:=NET_FW_RULE_DIR; // incoming connections, outgoing / Г‚ГµГ®Г¤ГїГ№ГЁГҐ ГЁ ГЁГ±ГµГ®Г¤ГїГ№ГЁГҐ Г±Г®ГҐГ¤ГЁГ­ГҐГ­ГЁГї
   NewRule.Enabled:=true;
   NewRule.Grouping:=AppID;
   NewRule.Profiles:=Profile;
-  NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
+  NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - Г§Г ГЇГ°ГҐГІГЁГІГј, NET_FW_ACTION_ALLOW - Г°Г Г§Г°ГҐГёГЁГІГј
   RulesObject.Add(NewRule);
 end;
 
-// Просто пример, вероятно смысла нет, потому что диалоги добавления будут не проще, чем в брандмауэер
+// ГЏГ°Г®Г±ГІГ® ГЇГ°ГЁГ¬ГҐГ°, ГўГҐГ°Г®ГїГІГ­Г® Г±Г¬Г»Г±Г«Г  Г­ГҐГІ, ГЇГ®ГІГ®Г¬Гі Г·ГІГ® Г¤ГЁГ Г«Г®ГЈГЁ Г¤Г®ГЎГ ГўГ«ГҐГ­ГЁГї ГЎГіГ¤ГіГІ Г­ГҐ ГЇГ°Г®Г№ГҐ, Г·ГҐГ¬ Гў ГЎГ°Г Г­Г¤Г¬Г ГіГЅГҐГ°
 // Just an example, probably no point, because the add dialogs will be no simpler than in the firewall
 // AddBlockPortRule('"TestPort"', 5791, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_IN);
 {procedure AddBlockPortRule(const Caption: string; const Port: integer; NET_FW_IP_PROTOCOL, NET_FW_RULE_DIR: integer);
@@ -189,13 +202,13 @@ var
 begin
   RuleCaption:=ExtractFileName(FilePath) + ' ' + DateToStr(Date) + ' ' + TimeToStr(Time);
 
-  // Add all rules to Firewall / Добавляем все правила в Firewall
+  // Add all rules to Firewall / Г„Г®ГЎГ ГўГ«ГїГҐГ¬ ГўГ±ГҐ ГЇГ°Г ГўГЁГ«Г  Гў Firewall
   AddRuleToFirewall(RuleCaption + '_TCP_IN', FilePath, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_IN);
   AddRuleToFirewall(RuleCaption + '_TCP_OUT', FilePath, NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_OUT);
   AddRuleToFirewall(RuleCaption + '_UDP_IN', FilePath, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_IN);
   AddRuleToFirewall(RuleCaption + '_UDP_OUT', FilePath, NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_OUT);
 
-  // Update the list, update RuleNames, RulePaths / Обновляем список, обновляем RuleNames, RulePaths
+  // Update the list, update RuleNames, RulePaths / ГЋГЎГ­Г®ГўГ«ГїГҐГ¬ Г±ГЇГЁГ±Г®ГЄ, Г®ГЎГ­Г®ГўГ«ГїГҐГ¬ RuleNames, RulePaths
   Main.LoadRegRules;
 end;
 
@@ -222,7 +235,7 @@ begin
   RemoveRuleFromFirewall(RuleName + '_UDP_IN');
   RemoveRuleFromFirewall(RuleName + '_UDP_OUT');
 
-  // Update the list, update RuleNames, RulePaths / Обновляем список, обновляем RuleNames, RulePaths
+  // Update the list, update RuleNames, RulePaths / ГЋГЎГ­Г®ГўГ«ГїГҐГ¬ Г±ГЇГЁГ±Г®ГЄ, Г®ГЎГ­Г®ГўГ«ГїГҐГ¬ RuleNames, RulePaths
   Main.LoadRegRules;
 end;
 
@@ -236,7 +249,7 @@ begin
   SendMessage(TrgWND, WM_COPYDATA, Integer(Application.Handle), Integer(@CDS));
 end;
 
-function GetLocaleInformation(Flag: integer): string; // If there are multiple languages in the system (with sorting) / Если в системе несколько языков (с сортировкой)
+function GetLocaleInformation(Flag: integer): string; // If there are multiple languages in the system (with sorting) / Г…Г±Г«ГЁ Гў Г±ГЁГ±ГІГҐГ¬ГҐ Г­ГҐГ±ГЄГ®Г«ГјГЄГ® ГїГ§Г»ГЄГ®Гў (Г± Г±Г®Г°ГІГЁГ°Г®ГўГЄГ®Г©)
 var
   pcLCA: array [0..20] of Char;
 begin
@@ -267,7 +280,7 @@ end;
 procedure TMain.RemBtnClick(Sender: TObject);
 begin
   if ListView.ItemIndex <> - 1 then begin
-    Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)])); // После удаления названия уже не будет, поэтому перед удалением
+    Status(Format(ID_RULE_SUCCESSFULLY_REMOVED, [CutStr(ExtractFileName(RulePaths.Strings[ListView.ItemIndex]), 22)])); // ГЏГ®Г±Г«ГҐ ГіГ¤Г Г«ГҐГ­ГЁГї Г­Г Г§ГўГ Г­ГЁГї ГіГ¦ГҐ Г­ГҐ ГЎГіГ¤ГҐГІ, ГЇГ®ГЅГІГ®Г¬Гі ГЇГҐГ°ГҐГ¤ ГіГ¤Г Г«ГҐГ­ГЁГҐГ¬
     RemoveAppRules(RuleNames.Strings[ListView.ItemIndex]);
   end else
     Status(ID_CHOOSE_RULE);
@@ -278,7 +291,7 @@ begin
   ShellExecute(0, 'open', 'WF.msc', nil, nil, SW_SHOWNORMAL);
 end;
 
-procedure TMain.CloseBtnClick(Sender: TObject);
+procedure TMain.CloseBtn2Click(Sender: TObject);
 begin
   Close;
 end;
@@ -442,32 +455,43 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu(const Recreate: boolean);
+
+procedure TMain.ContextMenu(const Recreate, CompactMode: boolean);
 const
   RegKey = '\exefile\shell\' + AppID;
 var
   Reg: TRegistry;
+  ExePath: string;
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if Recreate and Reg.KeyExists(RegKey) then
     Reg.DeleteKey(RegKey);
   if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
-    Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
-    Reg.WriteString('Icon', ParamStr(0) + ',0');
-    Reg.WriteString('SubCommands', '');
-    Reg.OpenKey(RegKey + '\Shell\Block', true);
-    Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
-    Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" --block "%1"');
-    Reg.OpenKey(RegKey + '\Shell\Unblock', true);
-    Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
-    Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" --ublock "%1"');
+
+    ExePath:=ParamStr(0);
+    Reg.WriteString('Icon', ExePath + ',0');
+    if CompactMode then begin
+      Reg.WriteString('', ID_BLOCK_ACCESS);
+      Reg.OpenKey(RegKey + '\Command', true);
+      Reg.WriteString('', '"' + ExePath + '" --block "%1"');
+    end else begin
+      Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
+      Reg.WriteString('SubCommands', '');
+      Reg.OpenKey(RegKey + '\Shell\Block', true);
+      Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
+      Reg.WriteString('Icon', ExePath + ',1');
+      Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
+      Reg.WriteString('', '"' + ExePath + '" --block "%1"');
+      Reg.OpenKey(RegKey + '\Shell\Unblock', true);
+      Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
+      Reg.WriteString('Icon', ExePath + ',2');
+      Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
+      Reg.WriteString('', '"' + ExePath + '" --unblock "%1"');
+    end;
+
+    Reg.CloseKey;
   end;
-  Reg.CloseKey;
   Reg.Free;
 end;
 
@@ -477,19 +501,25 @@ var
   Ini: TIniFile;
   LangFileName, Event: string;
 begin
-  // Translate / Перевод
+  // Translate / ГЏГҐГ°ГҐГўГ®Г¤
   AppLang:=GetLocaleInformation(LOCALE_SENGLANGUAGE);
   LangFileName:=AppLang + '.ini';
   if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
     LangFileName:='English.Ini';
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
-  RulesItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES', ''));
+  FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', ''));
   ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
   ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ''));
-  HelpItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
+  SettingsBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'SETTINGS', ''));
+  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
+  CloseBtn2.Caption:=CloseBtn.Caption;
+  HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
   ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', ''));
   AboutBtn.Caption:=ID_ABOUT;
+  CMDOptions.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', ''));
+
+  ID_COMMAND_LINE_OPTIONS_TEXT:=StringReplace(UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS_TEXT', '')), '\n', sLineBreak, [rfReplaceAll]);
 
   ListView.Columns[0].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NAME', ''));
   ListView.Columns[1].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_PATH', ''));
@@ -503,7 +533,6 @@ begin
   RemBtn2.Caption:=RemBtn.Caption;
   CheckBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'CHECK', ''));
   FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', ''));
-  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
 
   ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
   ID_RULES_SUCCESSFULLY_EXPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_EXPORTED', ''));
@@ -524,6 +553,15 @@ begin
   ID_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', ''));
   ID_BLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', ''));
   ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
+
+  ID_UNBLOCK_ACCESS_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS_CONTEXT_MENU', ''));
+  ID_APPLY:=UTF8ToAnsi(Ini.ReadString('Main', 'APPLY', ''));
+  ID_CANCEL:=UTF8ToAnsi(Ini.ReadString('Main', 'CANCEL', ''));
+
+  Ini.Free;
+
+  Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Setup.ini');
+  CompactContextMenu:=Ini.ReadBool('Main', 'CompactContextMenu', false);
   Ini.Free;
 
   SyncAppInfo;
@@ -616,7 +654,7 @@ end;
 procedure TMain.ListViewKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  // Fixing the bug that hides controls / Убираем баг скрытия контролов
+  // Fixing the bug that hides controls / Г“ГЎГЁГ°Г ГҐГ¬ ГЎГ ГЈ Г±ГЄГ°Г»ГІГЁГї ГЄГ®Г­ГІГ°Г®Г«Г®Гў
   if Key = VK_MENU then
     Key:=0;
 end;
@@ -624,7 +662,7 @@ end;
 procedure TMain.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  // Fixing the bug that hides controls / Убираем баг скрытия контролов
+  // Fixing the bug that hides controls / Г“ГЎГЁГ°Г ГҐГ¬ ГЎГ ГЈ Г±ГЄГ°Г»ГІГЁГї ГЄГ®Г­ГІГ°Г®Г«Г®Гў
   if Key = VK_MENU then
     Key:=0;
 end;
@@ -667,7 +705,7 @@ end;
 procedure TMain.SearchEdtKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  // Fixing the bug that hides controls / Убираем баг скрытия контролов
+  // Fixing the bug that hides controls / Г“ГЎГЁГ°Г ГҐГ¬ ГЎГ ГЈ Г±ГЄГ°Г»ГІГЁГї ГЄГ®Г­ГІГ°Г®Г«Г®Гў
   if Key = VK_MENU then
     Key:=0;
 
@@ -710,7 +748,7 @@ end;
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
   Application.MessageBox(PChar(Caption + ' ' + AppVersion + #13#10 +
-  ID_LAST_UPDATE + ' 17.06.25' + #13#10 +
+  ID_LAST_UPDATE + ' 26.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
@@ -823,9 +861,24 @@ begin
     Reg.CloseKey;
   end;
   Reg.Free;
-  ContextMenu(IsDifferent or HasChanged);
+  ContextMenu(IsDifferent or HasChanged, CompactContextMenu);
   FileAssociation(IsDifferent);
   FileExtension(IsDifferent);
+end;
+
+procedure TMain.CloseBtnClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TMain.SettingsBtnClick(Sender: TObject);
+begin
+  Settings.Show;
+end;
+
+procedure TMain.CMDOptionsClick(Sender: TObject);
+begin
+  Application.MessageBox(PChar(ID_COMMAND_LINE_OPTIONS_TEXT), PChar(CMDOptions.Caption), MB_ICONINFORMATION);
 end;
 
 end.
