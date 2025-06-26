@@ -65,9 +65,9 @@ type
     function HandleParams: string;
     procedure SyncAppInfo;
     procedure DragAndDrop;
-    procedure ContextMenu(Recreate: boolean);
-    procedure FileExtension(Recreate: boolean);
-    procedure FileAssociation(Recreate: boolean);
+    procedure ContextMenu(const Recreate: boolean);
+    procedure FileExtension(const Recreate: boolean);
+    procedure FileAssociation(const Recreate: boolean);
     { Private declarations }
   public
     procedure ImportRules(const FilePath: string);
@@ -442,7 +442,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu(Recreate: boolean);
+procedure TMain.ContextMenu(const Recreate: boolean);
 const
   RegKey = '\exefile\shell\' + AppID;
 var
@@ -764,7 +764,7 @@ begin
   end;
 end;
 
-procedure TMain.FileAssociation(Recreate: boolean);
+procedure TMain.FileAssociation(const Recreate: boolean);
 const
   RegKey = '\' + AppID + '.rules';
 var
@@ -785,7 +785,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.FileExtension(Recreate: boolean);
+procedure TMain.FileExtension(const Recreate: boolean);
 const
   RegKey = '\.fer';
 var
