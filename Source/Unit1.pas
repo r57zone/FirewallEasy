@@ -13,25 +13,31 @@ type
     RemBtn: TButton;
     CheckBtn: TButton;
     FirewallBtn: TButton;
-    CloseBtn: TButton;
+    CloseBtn2: TButton;
     OpenDialog: TOpenDialog;
     SearchEdt: TEdit;
     StatusBar: TStatusBar;
     ImportDialog: TOpenDialog;
     ExportDialog: TSaveDialog;
     MainMenu1: TMainMenu;
-    RulesItem: TMenuItem;
+    FileBtn: TMenuItem;
     ImportBtn: TMenuItem;
     ExportBtn: TMenuItem;
-    HelpItem: TMenuItem;
+    HelpBtn: TMenuItem;
     AboutBtn: TMenuItem;
     ListView: TListView;
     PopupMenu: TPopupMenu;
     RemBtn2: TMenuItem;
+    N1: TMenuItem;
+    SettingsBtn: TMenuItem;
+    N2: TMenuItem;
+    CloseBtn: TMenuItem;
+    N3: TMenuItem;
+    CMDOptions: TMenuItem;
     procedure AddBtnClick(Sender: TObject);
     procedure RemBtnClick(Sender: TObject);
     procedure FirewallBtnClick(Sender: TObject);
-    procedure CloseBtnClick(Sender: TObject);
+    procedure CloseBtn2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure CheckBtnClick(Sender: TObject);
@@ -56,6 +62,9 @@ type
     procedure ListViewKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure RemBtn2Click(Sender: TObject);
+    procedure CloseBtnClick(Sender: TObject);
+    procedure SettingsBtnClick(Sender: TObject);
+    procedure CMDOptionsClick(Sender: TObject);
   protected
     procedure WMDropFiles (var Msg: TMessage); message WM_DropFiles;
     procedure Status(const Content: string = '');
@@ -65,13 +74,14 @@ type
     function HandleParams: string;
     procedure SyncAppInfo;
     procedure DragAndDrop;
-    procedure ContextMenu(Recreate: boolean);
     procedure FileExtension(Recreate: boolean);
     procedure FileAssociation(Recreate: boolean);
     { Private declarations }
   public
+    CompactContextMenu: boolean;
     procedure ImportRules(const FilePath: string);
     procedure ExportRules(const FilePath: string);
+    procedure ContextMenu(Recreate, CompactMode: boolean);
     { Public declarations }
   end;
 
@@ -88,7 +98,8 @@ var
 
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
   ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
-  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS: string;
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS,
+  ID_UNBLOCK_ACCESS, ID_UNBLOCK_ACCESS_CONTEXT_MENU, ID_APPLY, ID_CANCEL, ID_COMMAND_LINE_OPTIONS_TEXT: string;
 
 const
   AppName = 'Firewall Easy';
@@ -102,6 +113,8 @@ const
   NET_FW_RULE_DIR_OUT = 2;  // OUT - outgoing / исходящие
 
 implementation
+
+uses Unit2;
 
 {$R *.dfm}
 {$R Icons.res}
@@ -278,7 +291,7 @@ begin
   ShellExecute(0, 'open', 'WF.msc', nil, nil, SW_SHOWNORMAL);
 end;
 
-procedure TMain.CloseBtnClick(Sender: TObject);
+procedure TMain.CloseBtn2Click(Sender: TObject);
 begin
   Close;
 end;
@@ -442,32 +455,42 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu(Recreate: boolean);
+procedure TMain.ContextMenu(Recreate, CompactMode: boolean);
 const
   RegKey = '\exefile\shell\' + AppID;
 var
   Reg: TRegistry;
+  ExePath: string;
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_CLASSES_ROOT;
   if Recreate and Reg.KeyExists(RegKey) then
     Reg.DeleteKey(RegKey);
   if (Reg.OpenKeyReadOnly(RegKey) = false) and Reg.OpenKey(RegKey, true) then begin
-    Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
-    Reg.WriteString('Icon', ParamStr(0) + ',0');
-    Reg.WriteString('SubCommands', '');
-    Reg.OpenKey(RegKey + '\Shell\Block', true);
-    Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
-    Reg.WriteString('Icon', ParamStr(0) + ',1');
-    Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" --block "%1"');
-    Reg.OpenKey(RegKey + '\Shell\Unblock', true);
-    Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
-    Reg.WriteString('Icon', ParamStr(0) + ',2');
-    Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
-    Reg.WriteString('', '"' + ParamStr(0) + '" --ublock "%1"');
+
+    ExePath:=ParamStr(0);
+    Reg.WriteString('Icon', ExePath + ',0');
+    if CompactMode then begin
+      Reg.WriteString('', ID_BLOCK_ACCESS);
+      Reg.OpenKey(RegKey + '\Command', true);
+      Reg.WriteString('', '"' + ExePath + '" --block "%1"');
+    end else begin
+      Reg.WriteString('MUIVerb', ID_CONTEXT_MENU);
+      Reg.WriteString('SubCommands', '');
+      Reg.OpenKey(RegKey + '\Shell\Block', true);
+      Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
+      Reg.WriteString('Icon', ExePath + ',1');
+      Reg.OpenKey(RegKey + '\Shell\Block\Command', true);
+      Reg.WriteString('', '"' + ExePath + '" --block "%1"');
+      Reg.OpenKey(RegKey + '\Shell\Unblock', true);
+      Reg.WriteString('MUIVerb', ID_UNBLOCK_ACCESS);
+      Reg.WriteString('Icon', ExePath + ',2');
+      Reg.OpenKey(RegKey + '\Shell\Unblock\Command', true);
+      Reg.WriteString('', '"' + ExePath + '" --unblock "%1"');
+    end;
+
+    Reg.CloseKey;
   end;
-  Reg.CloseKey;
   Reg.Free;
 end;
 
@@ -483,12 +506,18 @@ begin
     LangFileName:='English.Ini';
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
-  RulesItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES', ''));
+  FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', ''));
   ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
   ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ''));
-  HelpItem.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
+  SettingsBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'SETTINGS', ''));
+  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
+  CloseBtn2.Caption:=CloseBtn.Caption;
+  HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
   ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', ''));
   AboutBtn.Caption:=ID_ABOUT;
+  CMDOptions.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', ''));
+
+  ID_COMMAND_LINE_OPTIONS_TEXT:=StringReplace(UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS_TEXT', '')), '\n', sLineBreak, [rfReplaceAll]);
 
   ListView.Columns[0].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NAME', ''));
   ListView.Columns[1].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_PATH', ''));
@@ -502,7 +531,6 @@ begin
   RemBtn2.Caption:=RemBtn.Caption;
   CheckBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'CHECK', ''));
   FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', ''));
-  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
 
   ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
   ID_RULES_SUCCESSFULLY_EXPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_EXPORTED', ''));
@@ -523,6 +551,15 @@ begin
   ID_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', ''));
   ID_BLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', ''));
   ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
+
+  ID_UNBLOCK_ACCESS_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS_CONTEXT_MENU', ''));
+  ID_APPLY:=UTF8ToAnsi(Ini.ReadString('Main', 'APPLY', ''));
+  ID_CANCEL:=UTF8ToAnsi(Ini.ReadString('Main', 'CANCEL', ''));
+
+  Ini.Free;
+
+  Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Setup.ini');
+  CompactContextMenu:=Ini.ReadBool('Main', 'CompactContextMenu', false);
   Ini.Free;
 
   SyncAppInfo;
@@ -709,7 +746,7 @@ end;
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
   Application.MessageBox(PChar(Caption + ' ' + AppVersion + #13#10 +
-  ID_LAST_UPDATE + ' 17.06.25' + #13#10 +
+  ID_LAST_UPDATE + ' 26.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
@@ -818,9 +855,24 @@ begin
     Reg.CloseKey;
   end;
   Reg.Free;
-  ContextMenu(IsDifferent);
+  ContextMenu(IsDifferent, CompactContextMenu);
   FileExtension(IsDifferent);
   FileAssociation(IsDifferent);
+end;
+
+procedure TMain.CloseBtnClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TMain.SettingsBtnClick(Sender: TObject);
+begin
+  Settings.Show;
+end;
+
+procedure TMain.CMDOptionsClick(Sender: TObject);
+begin
+  Application.MessageBox(PChar(ID_COMMAND_LINE_OPTIONS_TEXT), PChar(CMDOptions.Caption), MB_ICONINFORMATION);
 end;
 
 end.
