@@ -82,7 +82,7 @@ var
   BlockedCount, UnblockedCount: integer;
 
   // Tranlate / Перевод
-  ID_SEARCH: string;
+  AppLang, ID_SEARCH: string;
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
@@ -478,7 +478,8 @@ var
   LangFileName, Event: string;
 begin
   // Translate / Перевод
-  LangFileName:=GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini';
+  AppLang:=GetLocaleInformation(LOCALE_SENGLANGUAGE);
+  LangFileName:=AppLang + '.ini';
   if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + GetLocaleInformation(LOCALE_SENGLANGUAGE) + '.ini') then
     LangFileName:='English.Ini';
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
@@ -804,9 +805,10 @@ end;
 procedure TMain.SyncAppInfo;
 var
   Reg: TRegistry;
-  IsDifferent: boolean;
+  IsDifferent, HasChanged: boolean;
 begin
-  IsDifferent:=true;
+  IsDifferent:=false;
+  HasChanged:=false;
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
   if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
@@ -815,10 +817,13 @@ begin
       Reg.WriteString('Path', ParamStr(0));
       Reg.WriteString('Version', AppVersion);
     end;
+    HasChanged:=(Reg.ReadString('Language') <> AppLang);
+    if HasChanged then
+      Reg.WriteString('Language', AppLang);
     Reg.CloseKey;
   end;
   Reg.Free;
-  ContextMenu(IsDifferent);
+  ContextMenu(IsDifferent or HasChanged);
   FileExtension(IsDifferent);
   FileAssociation(IsDifferent);
 end;
