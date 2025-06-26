@@ -66,8 +66,8 @@ type
     procedure SyncAppInfo;
     procedure DragAndDrop;
     procedure ContextMenu(const Recreate: boolean);
-    procedure FileExtension(const Recreate: boolean);
     procedure FileAssociation(const Recreate: boolean);
+    procedure FileExtension(const Recreate: boolean);
     { Private declarations }
   public
     procedure ImportRules(const FilePath: string);
@@ -824,8 +824,8 @@ begin
   end;
   Reg.Free;
   ContextMenu(IsDifferent or HasChanged);
-  FileExtension(IsDifferent);
   FileAssociation(IsDifferent);
+  FileExtension(IsDifferent);
 end;
 
 end.
