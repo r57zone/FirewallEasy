@@ -156,11 +156,11 @@ begin
   NewRule.Description:=Caption;
   NewRule.Applicationname:=Executable;
   NewRule.Protocol:=NET_FW_IP_PROTOCOL; // ѕротоколы
-  NewRule.Direction:=NET_FW_RULE_DIR; // incoming connections, outgoing / ¬ход€щие и исход€щие соединени€
+  NewRule.Direction:=NET_FW_RULE_DIR;   // incoming connections, outgoing / ¬ход€щие и исход€щие соединени€
   NewRule.Enabled:=true;
   NewRule.Grouping:=AppID;
   NewRule.Profiles:=Profile;
-  NewRule.Action:=NET_FW_ACTION_BLOCK; // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
+  NewRule.Action:=NET_FW_ACTION_BLOCK;  // NET_FW_ACTION_BLOCK - запретить, NET_FW_ACTION_ALLOW - разрешить
   RulesObject.Add(NewRule);
 end;
 
@@ -252,7 +252,7 @@ end;
 
 function GetLocaleInformation(Flag: integer): string; // If there are multiple languages in the system (with sorting) / ≈сли в системе несколько €зыков (с сортировкой)
 var
-  pcLCA: array [0..20] of Char;
+  pcLCA: array [0..25] of Char;
 begin
   if GetLocaleInfo((DWORD(SORT_DEFAULT) shl 16) or Word(GetUserDefaultUILanguage), Flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
