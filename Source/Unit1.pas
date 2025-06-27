@@ -119,6 +119,7 @@ uses Unit2;
 
 {$R Unit1.dfm}
 {$R Icons.res}
+{$R Strings.res}
 {$R UAC.res}
 
 function GetUserDefaultUILanguage: LANGID; stdcall; external 'kernel32.dll';
