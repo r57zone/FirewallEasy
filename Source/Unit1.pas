@@ -508,31 +508,31 @@ begin
     LangFileName:='English.Ini';
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
-  FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', ''));
-  ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
-  ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ''));
-  SettingsBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'SETTINGS', ''));
-  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
+  FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', FileBtn.Caption));
+  ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ImportBtn.Caption));
+  ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ExportBtn.Caption));
+  SettingsBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'SETTINGS', SettingsBtn.Caption));
+  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', CloseBtn.Caption));
   CloseBtn2.Caption:=CloseBtn.Caption;
-  HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
-  ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', ''));
+  HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', HelpBtn.Caption));
+  ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', AboutBtn.Caption));
   AboutBtn.Caption:=ID_ABOUT;
-  CMDOptions.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', ''));
+  CMDOptions.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', CMDOptions.Caption));
 
   ID_COMMAND_LINE_OPTIONS_TEXT:=StringReplace(UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS_TEXT', '')), '\n', sLineBreak, [rfReplaceAll]);
 
-  ListView.Columns[0].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NAME', ''));
-  ListView.Columns[1].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_PATH', ''));
+  ListView.Columns[0].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NAME', ListView.Columns[0].Caption));
+  ListView.Columns[1].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_PATH', ListView.Columns[1].Caption));
 
-  ID_SEARCH:=UTF8ToAnsi(Ini.ReadString('Main', 'SEARCH', ''));
+  ID_SEARCH:=UTF8ToAnsi(Ini.ReadString('Main', 'SEARCH', SearchEdt.Text));
   SearchEdt.Text:=ID_SEARCH;
 
-  AddBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD', ''));
+  AddBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD', AddBtn.Caption));
   OpenDialog.Filter:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD_FILTER_NAME', '')) + OpenDialog.Filter;
-  RemBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVE', ''));
+  RemBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVE', RemBtn.Caption));
   RemBtn2.Caption:=RemBtn.Caption;
-  CheckBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'CHECK', ''));
-  FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', ''));
+  CheckBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'CHECK', CheckBtn.Caption));
+  FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', FirewallBtn.Caption));
 
   ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
   ID_RULES_SUCCESSFULLY_EXPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_EXPORTED', ''));
