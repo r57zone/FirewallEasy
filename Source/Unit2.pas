@@ -27,7 +27,7 @@ implementation
 
 uses Unit1;
 
-{$R *.dfm}
+{$R Unit2.dfm}
 
 procedure TSettings.ApplyBtnClick(Sender: TObject);
 var

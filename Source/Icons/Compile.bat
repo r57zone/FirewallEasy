@@ -1,10 +1,12 @@
 @echo off
 
-echo.
+set OUTPUT=Icons
+
+echo/
 
 REM Requires brcc32.exe to be on %PATH%
-brcc32.exe .\Icons.rc -fo .\Icons.res
-echo.
+brcc32.exe .\%OUTPUT%.rc -fo .\%OUTPUT%.res
+echo/
 
 pause
 

@@ -74,8 +74,8 @@ type
     function HandleParams: string;
     procedure SyncAppInfo;
     procedure DragAndDrop;
-    procedure FileExtension(const Recreate: boolean);
     procedure FileAssociation(const Recreate: boolean);
+    procedure FileExtension(const Recreate: boolean);
     { Private declarations }
   public
     CompactContextMenu: boolean;
@@ -117,7 +117,7 @@ implementation
 
 uses Unit2;
 
-{$R *.dfm}
+{$R Unit1.dfm}
 {$R Icons.res}
 {$R UAC.res}
 
@@ -261,7 +261,7 @@ end;
 
 {function GetLocaleInformation2(Flag: integer): string; // Legacy
 var
-  pcLCA: array [0..20] of Char;
+  pcLCA: array [0..25] of Char;
 begin
   if GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, Flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
@@ -472,7 +472,7 @@ begin
     ExePath:=ParamStr(0);
     Reg.WriteString('Icon', ExePath + ',0');
     if CompactMode then begin
-      Reg.WriteString('', ID_BLOCK_ACCESS);
+      Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
       Reg.OpenKey(RegKey + '\Command', true);
       Reg.WriteString('', '"' + ExePath + '" --block "%1"');
     end else begin
@@ -860,8 +860,8 @@ begin
   end;
   Reg.Free;
   ContextMenu(IsDifferent, CompactContextMenu);
-  FileExtension(IsDifferent);
   FileAssociation(IsDifferent);
+  FileExtension(IsDifferent);
 end;
 
 procedure TMain.CloseBtnClick(Sender: TObject);
