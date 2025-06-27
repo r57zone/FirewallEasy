@@ -76,6 +76,7 @@ type
     procedure DragAndDrop;
     procedure FileAssociation(const Recreate: boolean);
     procedure FileExtension(const Recreate: boolean);
+    function FetchLocaleHandler: TIniFile;
     { Private declarations }
   public
     CompactContextMenu: boolean;
@@ -496,18 +497,28 @@ begin
   Reg.Free;
 end;
 
+function TMain.FetchLocaleHandler: TIniFile;
+const
+  LangDirectory = 'Languages\';
+var
+  LangFileName: string;
+begin
+  LangFileName:=SystemLang + '.ini';
+  if not FileExists(ExtractFilePath(ParamStr(0)) + LangDirectory + LangFileName) then
+    LangFileName:='English.Ini';
+
+  Result:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + LangDirectory + LangFileName);
+end;
+
 procedure TMain.FormCreate(Sender: TObject);
 var
   WND: HWND;
   Ini: TIniFile;
-  LangFileName, Event: string;
+  Event: string;
 begin
   // Translate / Перевод
   SystemLang:=GetLocaleInformation(LOCALE_SENGLANGUAGE);
-  LangFileName:=SystemLang + '.ini';
-  if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName) then
-    LangFileName:='English.Ini';
-  Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
+  Ini:=FetchLocaleHandler();
 
   FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', FileBtn.Caption));
   ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ImportBtn.Caption));
