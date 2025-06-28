@@ -76,7 +76,7 @@ type
     procedure DragAndDrop;
     procedure FileAssociation(const Recreate: boolean);
     procedure FileExtension(const Recreate: boolean);
-    function FetchLocaleHandler: TIniFile;
+    function FetchLocaleHandler: TCustomIniFile;
     { Private declarations }
   public
     CompactContextMenu: boolean;
@@ -497,23 +497,33 @@ begin
   Reg.Free;
 end;
 
-function TMain.FetchLocaleHandler: TIniFile;
+function TMain.FetchLocaleHandler: TCustomIniFile;
 const
-  LangDirectory = 'Languages\';
+  LangDirName = 'Languages\';
 var
   LangFileName: string;
+  IniStream: TStringStream;
 begin
-  LangFileName:=SystemLang + '.ini';
-  if not FileExists(ExtractFilePath(ParamStr(0)) + LangDirectory + LangFileName) then
-    LangFileName:='English.Ini';
+  if DirectoryExists(LangDirName) then begin // Fetch locale from directory / 
+    LangFileName:=SystemLang + '.ini';
+    if not FileExists(ExtractFilePath(ParamStr(0)) + LangDirName + LangFileName) then begin
+      SystemLang:='English';
+      LangFileName:=SystemLang + '.ini';
+    end;
 
-  Result:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + LangDirectory + LangFileName);
+    Result:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + LangDirName + LangFileName);
+  end else begin // Fetch locale from resource storage / 
+    IniStream:=TStringStream.Create;
+    IniStream.LoadFromStream(TResourceStream.Create(HInstance, 'STRINGS', RT_RCDATA));
+
+    Result:=TMemIniFile.Create(IniStream);
+  end;
 end;
 
 procedure TMain.FormCreate(Sender: TObject);
 var
   WND: HWND;
-  Ini: TIniFile;
+  Ini: TCustomIniFile;
   Event: string;
 begin
   // Translate / Перевод
