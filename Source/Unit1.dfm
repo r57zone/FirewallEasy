@@ -7,7 +7,7 @@ object Main: TMain
   ClientHeight = 323
   ClientWidth = 409
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
@@ -71,7 +71,7 @@ object Main: TMain
     Top = 246
     Width = 393
     Height = 21
-    Font.Charset = DEFAULT_CHARSET
+    Font.Charset = RUSSIAN_CHARSET
     Font.Color = clGray
     Font.Height = -11
     Font.Name = 'MS Sans Serif'

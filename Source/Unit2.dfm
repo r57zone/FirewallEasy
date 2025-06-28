@@ -7,7 +7,7 @@ object Settings: TSettings
   ClientHeight = 97
   ClientWidth = 285
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
