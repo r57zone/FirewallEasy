@@ -18,8 +18,8 @@ object Settings: TSettings
   PixelsPerInch = 96
   TextHeight = 13
   object AddUnblockContextMenuCB: TCheckBox
-    Left = 8
-    Top = 8
+    Left = 37
+    Top = 16
     Width = 265
     Height = 33
     Caption = #1056#1072#1079#1073#1083#1086#1082#1080#1088#1086#1074#1072#1090#1100'  '#1076#1086#1089#1090#1091#1087' '#1074' '#1080#1085#1090#1077#1088#1085#1077#1090' '#1074' '#1082#1086#1085#1090#1077#1082#1089#1090#1085#1086#1084' '#1084#1077#1085#1102
@@ -27,7 +27,7 @@ object Settings: TSettings
     WordWrap = True
   end
   object ApplyBtn: TButton
-    Left = 8
+    Left = 65
     Top = 64
     Width = 75
     Height = 25
@@ -36,7 +36,7 @@ object Settings: TSettings
     OnClick = ApplyBtnClick
   end
   object CancelBtn: TButton
-    Left = 88
+    Left = 145
     Top = 64
     Width = 75
     Height = 25
