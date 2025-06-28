@@ -74,8 +74,8 @@ type
     function HandleParams: string;
     procedure SyncAppInfo;
     procedure DragAndDrop;
-    procedure FileExtension(const Recreate: boolean);
     procedure FileAssociation(const Recreate: boolean);
+    procedure FileExtension(const Recreate: boolean);
     { Private declarations }
   public
     CompactContextMenu: boolean;
@@ -100,12 +100,12 @@ var
   ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
   ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
   ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS,
-  ID_UNBLOCK_ACCESS, ID_UNBLOCK_ACCESS_CONTEXT_MENU, ID_APPLY, ID_CANCEL, ID_COMMAND_LINE_OPTIONS_TEXT: string;
+  ID_UNBLOCK_ACCESS, ID_UNBLOCK_ACCESS_CONTEXT_MENU, ID_APPLY, ID_CANCEL, ID_COMMAND_LINE_OPTIONS, ID_COMMAND_LINE_OPTIONS_TEXT: string;
 
 const
   AppName = 'Firewall Easy';
   AppID = 'FirewallEasy';
-  AppVersion = '0.8.3';
+  AppVersion = '0.8.4';
 
   NET_FW_IP_PROTOCOL_TCP = 6;
   NET_FW_IP_PROTOCOL_UDP = 17;
@@ -252,7 +252,7 @@ end;
 
 function GetLocaleInformation(Flag: integer): string; // If there are multiple languages in the system (with sorting) / Если в системе несколько языков (с сортировкой)
 var
-  pcLCA: array [0..20] of Char;
+  pcLCA: array [0..63] of Char;
 begin
   if GetLocaleInfo((DWORD(SORT_DEFAULT) shl 16) or Word(GetUserDefaultUILanguage), Flag, pcLCA, Length(pcLCA)) <= 0 then
     pcLCA[0]:=#0;
@@ -472,7 +472,7 @@ begin
     ExePath:=ParamStr(0);
     Reg.WriteString('Icon', ExePath + ',0');
     if CompactMode then begin
-      Reg.WriteString('', ID_BLOCK_ACCESS);
+      Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
       Reg.OpenKey(RegKey + '\Command', true);
       Reg.WriteString('', '"' + ExePath + '" --block "%1"');
     end else begin
@@ -503,60 +503,68 @@ var
 begin
   // Translate / Перевод
   SystemLang:=GetLocaleInformation(LOCALE_SENGLANGUAGE);
+  if SystemLang = 'Chinese' then
+    SystemLang:='Chinese (Simplified)'
+  else if Pos('Spanish', SystemLang) > 0 then
+    SystemLang:='Spanish'
+  else if Pos('Portuguese', SystemLang) > 0 then
+    SystemLang:='Portuguese';
+
   LangFileName:=SystemLang + '.ini';
   if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName) then
     LangFileName:='English.Ini';
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
-  FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', ''));
-  ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', ''));
-  ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', ''));
-  SettingsBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'SETTINGS', ''));
-  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', ''));
+  FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', 'File'));
+  ImportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'IMPORT', 'Import'));
+  ExportBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXPORT', 'Export'));
+  SettingsBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'SETTINGS', 'Settings'));
+  CloseBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'EXIT', 'Exit'));
   CloseBtn2.Caption:=CloseBtn.Caption;
-  HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', ''));
-  ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', ''));
+  HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', 'Help'));
+  ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', 'About...'));
   AboutBtn.Caption:=ID_ABOUT;
-  CMDOptions.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', ''));
 
-  ID_COMMAND_LINE_OPTIONS_TEXT:=StringReplace(UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS_TEXT', '')), '\n', sLineBreak, [rfReplaceAll]);
+  ID_COMMAND_LINE_OPTIONS:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', 'Command Line Options'));
+  CMDOptions.Caption:=ID_COMMAND_LINE_OPTIONS;
+  ID_COMMAND_LINE_OPTIONS_TEXT:=StringReplace(UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS_TEXT', 'Block internet:\n-b "App.exe" or --block "App.exe"\n\nUnblock internet:\n-u "App.exe" or --unblock "App.exe"\n\nImport rules:\n-i "Rules.fer" or --import "Rules.fer"\n\nExport rules:\n-e "Rules.fer" or --export "Rules.fer"\n\nSilent mode:\n-s or --silent')), '\n', sLineBreak, [rfReplaceAll]);
 
-  ListView.Columns[0].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NAME', ''));
-  ListView.Columns[1].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_PATH', ''));
+  ListView.Columns[0].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NAME', 'Name'));
+  ListView.Columns[1].Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_PATH', 'Path'));
 
-  ID_SEARCH:=UTF8ToAnsi(Ini.ReadString('Main', 'SEARCH', ''));
+  ID_SEARCH:=UTF8ToAnsi(Ini.ReadString('Main', 'SEARCH', 'Search...'));
   SearchEdt.Text:=ID_SEARCH;
 
-  AddBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD', ''));
-  OpenDialog.Filter:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD_FILTER_NAME', '')) + OpenDialog.Filter;
-  RemBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVE', ''));
+  AddBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD', 'Add'));
+  OpenDialog.Filter:=UTF8ToAnsi(Ini.ReadString('Main', 'ADD_FILTER_NAME', 'Applications')) + OpenDialog.Filter;
+  RemBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVE', 'Remove'));
   RemBtn2.Caption:=RemBtn.Caption;
-  CheckBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'CHECK', ''));
-  FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', ''));
+  CheckBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'CHECK', 'Check'));
+  FirewallBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FIREWALL', 'Firewall'));
 
-  ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', ''));
-  ID_RULES_SUCCESSFULLY_EXPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_EXPORTED', ''));
-  ID_RULE_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_CREATED', ''));
-  ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', ''));
-  ID_RULE_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_REMOVED', ''));
-  ID_RULE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_NOT_FOUND', ''));
-  ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', ''));
-  ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', ''));
-  ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', ''));
-  ID_FAILED_CREATE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_CREATE_RULES', ''));
-  ID_RULES_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_REMOVED', ''));
-  ID_FAILED_REMOVE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_REMOVE_RULES', ''));
-  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVED_RULES_FOR_NONEXISTENT_APPS', ''));
-  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', ''));
+  ID_RULES_SUCCESSFULLY_IMPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_IMPORTED', 'Rules successfully imported'));
+  ID_RULES_SUCCESSFULLY_EXPORTED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_EXPORTED', 'Rules successfully exported'));
+  ID_RULE_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_CREATED', 'Rule for application "%s" successfully created'));
+  ID_RULE_ALREADY_EXISTS:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_ALREADY_EXISTS', 'Rule for app "%s" already exists'));
+  ID_RULE_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_SUCCESSFULLY_REMOVED', 'Rule for application "%s" successfully removed'));
+  ID_RULE_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULE_NOT_FOUND', 'Rule for app "%s" doesn''t exist'));
+  ID_APP_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'APP_NOT_FOUND', 'Application "%s" doesn''t exist'));
+  ID_CHOOSE_RULE:=UTF8ToAnsi(Ini.ReadString('Main', 'CHOOSE_RULE', 'Choose rule'));
+  ID_RULES_SUCCESSFULLY_CREATED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_CREATED', 'Rules successfully created:'));
+  ID_FAILED_CREATE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_CREATE_RULES', 'Failed to create rules'));
+  ID_RULES_SUCCESSFULLY_REMOVED:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_SUCCESSFULLY_REMOVED', 'Rules successfully removed:'));
+  ID_FAILED_REMOVE_RULES:=UTF8ToAnsi(Ini.ReadString('Main', 'FAILED_REMOVE_RULES', 'Failed to remove rules'));
+  ID_REMOVED_RULES_FOR_NONEXISTENT_APPS:=UTF8ToAnsi(Ini.ReadString('Main', 'REMOVED_RULES_FOR_NONEXISTENT_APPS', 'Removed rules for nonexistent applications:'));
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND:=UTF8ToAnsi(Ini.ReadString('Main', 'RULES_FOR_NONEXISTENT_APPS_NOT_FOUND', 'Rules for nonexistent applications not found'));
 
-  ID_LAST_UPDATE:=UTF8ToAnsi(Ini.ReadString('Main', 'LAST_UPDATE', ''));
-  ID_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', ''));
-  ID_BLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', ''));
-  ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', ''));
+  ID_LAST_UPDATE:=UTF8ToAnsi(Ini.ReadString('Main', 'LAST_UPDATE', 'Last update:'));
+  ID_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'CONTEXT_MENU', 'Firewall rules'));
+  ID_BLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'BLOCK_ACCESS', 'Block internet access'));
+  ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', 'Unblock internet access'));
 
-  ID_UNBLOCK_ACCESS_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS_CONTEXT_MENU', ''));
-  ID_APPLY:=UTF8ToAnsi(Ini.ReadString('Main', 'APPLY', ''));
-  ID_CANCEL:=UTF8ToAnsi(Ini.ReadString('Main', 'CANCEL', ''));
+  ID_UNBLOCK_ACCESS_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS_CONTEXT_MENU', 'Unblock internet access in context menu'));
+  ID_APPLY:=UTF8ToAnsi(Ini.ReadString('Main', 'APPLY', 'Apply'));
+  ID_CANCEL:=UTF8ToAnsi(Ini.ReadString('Main', 'CANCEL', 'Cancel'));
 
   Ini.Free;
 
@@ -748,7 +756,7 @@ end;
 procedure TMain.AboutBtnClick(Sender: TObject);
 begin
   Application.MessageBox(PChar(Caption + ' ' + AppVersion + #13#10 +
-  ID_LAST_UPDATE + ' 26.06.25' + #13#10 +
+  ID_LAST_UPDATE + ' 28.06.25' + #13#10 +
   'https://r57zone.github.io' + #13#10 +
   'r57zone@gmail.com'), PChar(ID_ABOUT), MB_ICONINFORMATION);
 end;
@@ -859,8 +867,8 @@ begin
   end;
   Reg.Free;
   ContextMenu(IsDifferent, CompactContextMenu);
-  FileExtension(IsDifferent);
   FileAssociation(IsDifferent);
+  FileExtension(IsDifferent);
 end;
 
 procedure TMain.CloseBtnClick(Sender: TObject);
@@ -875,7 +883,7 @@ end;
 
 procedure TMain.CMDOptionsClick(Sender: TObject);
 begin
-  Application.MessageBox(PChar(ID_COMMAND_LINE_OPTIONS_TEXT), PChar(CMDOptions.Caption), MB_ICONINFORMATION);
+  Application.MessageBox(PChar(ID_COMMAND_LINE_OPTIONS_TEXT), PChar(ID_COMMAND_LINE_OPTIONS), MB_ICONINFORMATION);
 end;
 
 end.

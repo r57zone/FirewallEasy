@@ -4,7 +4,7 @@ object Settings: TSettings
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-  ClientHeight = 97
+  ClientHeight = 90
   ClientWidth = 285
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -26,22 +26,30 @@ object Settings: TSettings
     TabOrder = 0
     WordWrap = True
   end
-  object ApplyBtn: TButton
-    Left = 8
-    Top = 64
-    Width = 75
-    Height = 25
-    Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+  object Panel: TPanel
+    Left = 0
+    Top = 49
+    Width = 285
+    Height = 41
+    Align = alBottom
     TabOrder = 1
-    OnClick = ApplyBtnClick
-  end
-  object CancelBtn: TButton
-    Left = 88
-    Top = 64
-    Width = 75
-    Height = 25
-    Caption = #1054#1090#1084#1077#1085#1072
-    TabOrder = 2
-    OnClick = CancelBtnClick
+    object ApplyBtn: TButton
+      Left = 6
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      TabOrder = 0
+      OnClick = ApplyBtnClick
+    end
+    object CancelBtn: TButton
+      Left = 85
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = #1054#1090#1084#1077#1085#1072
+      TabOrder = 1
+      OnClick = CancelBtnClick
+    end
   end
 end

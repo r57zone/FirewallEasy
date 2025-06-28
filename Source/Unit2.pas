@@ -4,11 +4,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, IniFiles;
+  Dialogs, StdCtrls, IniFiles, ExtCtrls;
 
 type
   TSettings = class(TForm)
     AddUnblockContextMenuCB: TCheckBox;
+    Panel: TPanel;
     ApplyBtn: TButton;
     CancelBtn: TButton;
     procedure ApplyBtnClick(Sender: TObject);

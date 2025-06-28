@@ -7,7 +7,7 @@ object Main: TMain
   ClientHeight = 323
   ClientWidth = 409
   Color = clBtnFace
-  Font.Charset = RUSSIAN_CHARSET
+  Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
@@ -162,16 +162,16 @@ object Main: TMain
     end
     object HelpBtn: TMenuItem
       Caption = #1057#1087#1088#1072#1074#1082#1072
-      object AboutBtn: TMenuItem
-        Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077'...'
-        OnClick = AboutBtnClick
+      object CMDOptions: TMenuItem
+        Caption = #1050#1083#1102#1095#1080' '#1079#1072#1087#1091#1089#1082#1072
+        OnClick = CMDOptionsClick
       end
       object N3: TMenuItem
         Caption = '-'
       end
-      object CMDOptions: TMenuItem
-        Caption = #1050#1083#1102#1095#1080' '#1079#1072#1087#1091#1089#1082#1072
-        OnClick = CMDOptionsClick
+      object AboutBtn: TMenuItem
+        Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077'...'
+        OnClick = AboutBtnClick
       end
     end
   end
