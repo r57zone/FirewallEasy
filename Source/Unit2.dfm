@@ -4,7 +4,7 @@ object Settings: TSettings
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
-  ClientHeight = 90
+  ClientHeight = 123
   ClientWidth = 285
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -23,6 +23,15 @@ object Settings: TSettings
     Width = 265
     Height = 33
     Caption = #1056#1072#1079#1073#1083#1086#1082#1080#1088#1086#1074#1072#1090#1100'  '#1076#1086#1089#1090#1091#1087' '#1074' '#1080#1085#1090#1077#1088#1085#1077#1090' '#1074' '#1082#1086#1085#1090#1077#1082#1089#1090#1085#1086#1084' '#1084#1077#1085#1102
+    TabOrder = 0
+    WordWrap = True
+  end
+  object EnableDragAndDropCB: TCheckBox
+    Left = 8
+    Top = 33
+    Width = 265
+    Height = 33
+    Caption = ''
     TabOrder = 0
     WordWrap = True
   end

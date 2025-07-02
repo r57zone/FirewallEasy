@@ -78,10 +78,11 @@ type
     procedure FileExtension(const Recreate: boolean);
     { Private declarations }
   public
-    CompactContextMenu: boolean;
+    CompactContextMenu, DragAndDropEnabled: boolean;
     procedure ImportRules(const FilePath: string);
     procedure ExportRules(const FilePath: string);
     procedure ContextMenu(const Recreate, CompactMode: boolean);
+    procedure EnableLUA(const Disable: boolean);
     { Public declarations }
   end;
 
@@ -97,10 +98,10 @@ var
 
   ID_ABOUT, ID_LAST_UPDATE: string;
 
-  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE,
+  ID_RULE_SUCCESSFULLY_CREATED, ID_RULE_ALREADY_EXISTS, ID_RULE_SUCCESSFULLY_REMOVED, ID_RULE_NOT_FOUND, ID_APP_NOT_FOUND, ID_CHOOSE_RULE, ID_WARNING,
   ID_RULES_SUCCESSFULLY_CREATED, ID_FAILED_CREATE_RULES, ID_RULES_SUCCESSFULLY_REMOVED, ID_FAILED_REMOVE_RULES, ID_REMOVED_RULES_FOR_NONEXISTENT_APPS,
-  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS,
-  ID_UNBLOCK_ACCESS, ID_UNBLOCK_ACCESS_CONTEXT_MENU, ID_APPLY, ID_CANCEL, ID_COMMAND_LINE_OPTIONS, ID_COMMAND_LINE_OPTIONS_TEXT: string;
+  ID_RULES_FOR_NONEXISTENT_APPS_NOT_FOUND, ID_RULES_SUCCESSFULLY_IMPORTED, ID_RULES_SUCCESSFULLY_EXPORTED, ID_CONTEXT_MENU, ID_BLOCK_ACCESS, ID_UNBLOCK_ACCESS,
+  ID_UNBLOCK_ACCESS_CONTEXT_MENU, ID_ENABLE_DRAG_AND_DROP, ID_DRAG_AND_DROP_WARNING, ID_APPLY, ID_CANCEL, ID_COMMAND_LINE_OPTIONS, ID_COMMAND_LINE_OPTIONS_TEXT: string;
 
 const
   AppName = 'Firewall Easy';
@@ -445,14 +446,40 @@ begin
 end;
 
 procedure TMain.DragAndDrop;
+const
+  RegKey = 'EnableLUA';
 var
   Reg: TRegistry;
 begin
   Reg:=TRegistry.Create(KEY_READ);
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System')) and (Reg.ValueExists('EnableLUA')) and (Reg.ReadInteger('EnableLUA') = 0) then
+  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System')) and (Reg.ValueExists(RegKey)) and (Reg.ReadInteger(RegKey) = 0) then begin
     DragAcceptFiles(Handle, true);
+    DragAndDropEnabled:=true;
+  end else
+    DragAndDropEnabled:=false;
   Reg.CloseKey;
+  Reg.Free;
+end;
+
+procedure TMain.EnableLUA(const Disable: boolean);
+const
+  RegKey = 'EnableLUA';
+var
+  Reg: TRegistry;
+begin
+  Reg:=TRegistry.Create;
+  Reg.RootKey:=HKEY_LOCAL_MACHINE;
+  if Reg.OpenKey('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', true) then begin
+    if Disable then begin
+      Reg.WriteInteger(RegKey, 0);
+      DragAcceptFiles(Handle, true);
+    end else begin
+      Reg.WriteInteger(RegKey, 1);
+      DragAcceptFiles(Handle, false);
+    end;
+    Reg.CloseKey;
+  end;
   Reg.Free;
 end;
 
@@ -524,6 +551,7 @@ begin
   HelpBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'HELP', 'Help'));
   ID_ABOUT:=UTF8ToAnsi(Ini.ReadString('Main', 'ABOUT', 'About...'));
   AboutBtn.Caption:=ID_ABOUT;
+  ID_WARNING:=UTF8ToAnsi(Ini.ReadString('Main', 'WARNING', 'Warning'));
 
   ID_COMMAND_LINE_OPTIONS:=UTF8ToAnsi(Ini.ReadString('Main', 'COMMAND_LINE_OPTIONS', 'Command Line Options'));
   CMDOptions.Caption:=ID_COMMAND_LINE_OPTIONS;
@@ -563,6 +591,9 @@ begin
   ID_UNBLOCK_ACCESS:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS', 'Unblock internet access'));
 
   ID_UNBLOCK_ACCESS_CONTEXT_MENU:=UTF8ToAnsi(Ini.ReadString('Main', 'UNBLOCK_ACCESS_CONTEXT_MENU', 'Unblock internet access in context menu'));
+  ID_ENABLE_DRAG_AND_DROP:=UTF8ToAnsi(Ini.ReadString('Main', 'ENABLE_DRAG_AND_DROP', 'Enable support for drag and drop'));
+  ID_DRAG_AND_DROP_WARNING:=UTF8ToAnsi(Ini.ReadString('Main', 'DRAG_AND_DROP_WARNING', 'This option can have negative effects when it comes to security as it completely disables UAC prompts. Please proceed with caution!'));
+
   ID_APPLY:=UTF8ToAnsi(Ini.ReadString('Main', 'APPLY', 'Apply'));
   ID_CANCEL:=UTF8ToAnsi(Ini.ReadString('Main', 'CANCEL', 'Cancel'));
 
@@ -856,7 +887,7 @@ begin
   IsDifferent:=true;
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  if Reg.OpenKey('\Software\r57zone\' + AppID, true) then begin
+  if Reg.OpenKey('\SOFTWARE\r57zone\' + AppID, true) then begin
     IsDifferent:=(Reg.ReadString('Path') <> ParamStr(0)) or (Reg.ReadString('Version') <> AppVersion) or (Reg.ReadString('Language') <> SystemLang);
     if IsDifferent then begin
       Reg.WriteString('Path', ParamStr(0));
