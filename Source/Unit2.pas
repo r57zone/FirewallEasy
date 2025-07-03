@@ -42,12 +42,14 @@ procedure TSettings.ApplyBtnClick(Sender: TObject);
 var
   Ini: TIniFile;
 begin
-  Main.CompactContextMenu:=not AddUnblockContextMenuCB.Checked;
+  if Main.CompactContextMenu = AddUnblockContextMenuCB.Checked then begin
+    Main.CompactContextMenu:=not AddUnblockContextMenuCB.Checked;
+    Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Setup.ini');
+    Ini.WriteBool('Main', 'CompactContextMenu', Main.CompactContextMenu);
+    Ini.Free;
+    Main.ContextMenu(true, Main.CompactContextMenu);
+  end;
   Main.DragAndDropEnabled:=EnableDragAndDropCB.Checked;
-  Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Setup.ini');
-  Ini.WriteBool('Main', 'CompactContextMenu', Main.CompactContextMenu);
-  Ini.Free;
-  Main.ContextMenu(true, Main.CompactContextMenu);
   Main.EnableLUA(Main.DragAndDropEnabled);
   Close;
 end;
@@ -55,6 +57,10 @@ end;
 procedure TSettings.CancelBtnClick(Sender: TObject);
 begin
   Close;
+  AddUnblockContextMenuCB.Checked:=not Main.CompactContextMenu;
+  EnableDragAndDropCB.OnClick:=nil;
+  EnableDragAndDropCB.Checked:=Main.DragAndDropEnabled;
+  EnableDragAndDropCB.OnClick:=DragAndDropShowWarning;
 end;
 
 procedure TSettings.FormCreate(Sender: TObject);
