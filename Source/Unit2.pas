@@ -49,18 +49,23 @@ begin
     Ini.Free;
     Main.ContextMenu(true, Main.CompactContextMenu);
   end;
-  Main.DragAndDropEnabled:=EnableDragAndDropCB.Checked;
-  Main.EnableLUA(Main.DragAndDropEnabled);
+  if Main.DragAndDropEnabled <> EnableDragAndDropCB.Checked then begin
+    Main.DragAndDropEnabled:=EnableDragAndDropCB.Checked;
+    Main.EnableLUA(Main.DragAndDropEnabled);
+  end;
   Close;
 end;
 
 procedure TSettings.CancelBtnClick(Sender: TObject);
 begin
   Close;
-  AddUnblockContextMenuCB.Checked:=not Main.CompactContextMenu;
-  EnableDragAndDropCB.OnClick:=nil;
-  EnableDragAndDropCB.Checked:=Main.DragAndDropEnabled;
-  EnableDragAndDropCB.OnClick:=DragAndDropShowWarning;
+  if Main.CompactContextMenu = AddUnblockContextMenuCB.Checked then
+    AddUnblockContextMenuCB.Checked:=not Main.CompactContextMenu;
+  if Main.DragAndDropEnabled <> EnableDragAndDropCB.Checked then begin
+    EnableDragAndDropCB.OnClick:=nil;
+    EnableDragAndDropCB.Checked:=Main.DragAndDropEnabled;
+    EnableDragAndDropCB.OnClick:=DragAndDropShowWarning;
+  end;
 end;
 
 procedure TSettings.FormCreate(Sender: TObject);
