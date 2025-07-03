@@ -47,7 +47,7 @@ begin
     Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Setup.ini');
     Ini.WriteBool('Main', 'CompactContextMenu', Main.CompactContextMenu);
     Ini.Free;
-    Main.ContextMenu(true, Main.CompactContextMenu);
+    Main.ContextMenu(true);
   end;
   if Main.DragAndDropEnabled <> EnableDragAndDropCB.Checked then begin
     Main.DragAndDropEnabled:=EnableDragAndDropCB.Checked;

@@ -81,7 +81,7 @@ type
     CompactContextMenu, DragAndDropEnabled: boolean;
     procedure ImportRules(const FilePath: string);
     procedure ExportRules(const FilePath: string);
-    procedure ContextMenu(const Recreate, CompactMode: boolean);
+    procedure ContextMenu(const Recreate: boolean);
     procedure EnableLUA(const Disable: boolean);
     { Public declarations }
   end;
@@ -483,7 +483,7 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.ContextMenu(const Recreate, CompactMode: boolean);
+procedure TMain.ContextMenu(const Recreate: boolean);
 const
   RegKey = '\exefile\shell\' + AppID;
 var
@@ -498,7 +498,7 @@ begin
 
     ExePath:=ParamStr(0);
     Reg.WriteString('Icon', ExePath + ',0');
-    if CompactMode then begin
+    if CompactContextMenu then begin
       Reg.WriteString('MUIVerb', ID_BLOCK_ACCESS);
       Reg.OpenKey(RegKey + '\Command', true);
       Reg.WriteString('', '"' + ExePath + '" --block "%1"');
@@ -897,7 +897,7 @@ begin
     Reg.CloseKey;
   end;
   Reg.Free;
-  ContextMenu(IsDifferent, CompactContextMenu);
+  ContextMenu(IsDifferent);
   FileAssociation(IsDifferent);
   FileExtension(IsDifferent);
 end;
