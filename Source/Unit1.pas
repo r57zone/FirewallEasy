@@ -82,7 +82,7 @@ type
     procedure ImportRules(const FilePath: string);
     procedure ExportRules(const FilePath: string);
     procedure ContextMenu(const Recreate: boolean);
-    procedure EnableLUA(const Disable: boolean);
+    procedure ToggleEnableLUA;
     { Public declarations }
   end;
 
@@ -447,13 +447,13 @@ end;
 
 procedure TMain.DragAndDrop;
 const
-  RegKey = 'EnableLUA';
+  RegValue = 'EnableLUA';
 var
   Reg: TRegistry;
 begin
   Reg:=TRegistry.Create(KEY_READ);
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
-  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System')) and (Reg.ValueExists(RegKey)) and (Reg.ReadInteger(RegKey) = 0) then begin
+  if (Reg.OpenKeyReadOnly('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System')) and (Reg.ValueExists(RegValue)) and (Reg.ReadInteger(RegValue) = 0) then begin
     DragAcceptFiles(Handle, true);
     DragAndDropEnabled:=true;
   end else
@@ -462,20 +462,20 @@ begin
   Reg.Free;
 end;
 
-procedure TMain.EnableLUA(const Disable: boolean);
+procedure TMain.ToggleEnableLUA;
 const
-  RegKey = 'EnableLUA';
+  RegValue = 'EnableLUA';
 var
   Reg: TRegistry;
 begin
   Reg:=TRegistry.Create;
   Reg.RootKey:=HKEY_LOCAL_MACHINE;
   if Reg.OpenKey('SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', true) then begin
-    if Disable then begin
-      Reg.WriteInteger(RegKey, 0);
+    if DragAndDropEnabled then begin
+      Reg.WriteInteger(RegValue, 0);
       DragAcceptFiles(Handle, true);
     end else begin
-      Reg.WriteInteger(RegKey, 1);
+      Reg.WriteInteger(RegValue, 1);
       DragAcceptFiles(Handle, false);
     end;
     Reg.CloseKey;

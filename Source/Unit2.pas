@@ -51,7 +51,7 @@ begin
   end;
   if Main.DragAndDropEnabled <> EnableDragAndDropCB.Checked then begin
     Main.DragAndDropEnabled:=EnableDragAndDropCB.Checked;
-    Main.EnableLUA(Main.DragAndDropEnabled);
+    Main.ToggleEnableLUA;
   end;
   Close;
 end;
