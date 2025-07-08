@@ -538,8 +538,10 @@ begin
     SystemLang:='Portuguese';
 
   LangFileName:=SystemLang + '.ini';
-  if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName) then
-    LangFileName:='English.Ini';
+  if not FileExists(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName) then begin
+    SystemLang:='English';
+    LangFileName:=SystemLang + '.ini';
+  end;
   Ini:=TIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Languages\' + LangFileName);
 
   FileBtn.Caption:=UTF8ToAnsi(Ini.ReadString('Main', 'FILE', 'File'));
