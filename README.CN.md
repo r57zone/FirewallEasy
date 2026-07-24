@@ -2,13 +2,13 @@
 [![RU](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)](https://github.com/r57zone/Firewall-Easy/blob/master/README.RU.md)
 [![JP](https://user-images.githubusercontent.com/9499881/195409269-5aa8a8a6-c6a8-491f-b1a2-9a4570fcb8db.png)](https://github.com/r57zone/Firewall-Easy/blob/master/README.JP.md)
 [![CN](https://github.com/user-attachments/assets/16848591-2baf-4300-893b-b95d5249a34e)](https://github.com/r57zone/Firewall-Easy/blob/master/README.CN.md)
-← Choose language | Выберите язык
+← 选择语言
 
-# Firewall Easy
-Application allows you to block internet access to other applications using the Windows Firewall.
+# 防火墙简易版
+该应用程序允许你通过 Windows 防火墙来阻止其他应用程序访问互联网。
 
 
-The following languages are supported: English, Russian, Chinese (Simplified), Chinese (Traditional), Spanish, Portuguese (Brazilian Portuguese), French, German, Japanese, Arabic, Italian, Korean, Turkish, and Polish.
+支持以下语言：英语、俄语、中文（简体）、中文（繁体）、西班牙语、葡萄牙语（巴西方言）、法语、德语、日语、阿拉伯语、意大利语、韩语、土耳其语和波兰语。
 
 ![flag-united-kingdom](https://github.com/user-attachments/assets/8c03c9b8-d154-466f-b9c4-6ea60278d537)
 ![flag-russia](https://user-images.githubusercontent.com/9499881/27683795-5b0fbac6-5cd8-11e7-929c-057833e01fb1.png)
@@ -27,31 +27,31 @@ The following languages are supported: English, Russian, Chinese (Simplified), C
 ![flag-turkey](https://github.com/user-attachments/assets/b932b6f7-e702-4db2-9993-d0fbf188bbae)
 ![flag-poland](https://github.com/user-attachments/assets/e94d2b22-8d24-4421-a64a-582e02297e96)
 
-## Features
-**• Block internet access in just a few clicks**<br>
+## 特点
+**• 只需几次点击即可阻止互联网访问**<br>
 ![](https://github.com/user-attachments/assets/4e576903-5ba9-4cce-8b28-63ce2108d1cc)<br>
-Right-click on a program to block or unblock its internet access.
+右键点击某个程序，可以选择启用或禁用其对互联网访问的权限。
 
-**• Support Drag and Drop**<br>
-Move programs to the "Firewall Easy" interface and access to the internet will be blocked for them.
+**• 支持拖放操作**<br>
+将程序移动到“防火墙简化”界面后，这些程序将无法访问互联网。
 
-**• Command Line Arguments**<br>
-| Description                               | Short Command   | Full Command         |
+**• 命令行参数**<br>
+| 描述                               | 简短的命令   | 完整命令         |
 |------------------------------------------|------------------|-----------------------|
-| Block internet access for an application | `-b "App.exe"`   | `--block "App.exe"`   |
-| Unblock internet access for an application | `-u "App.exe"` | `--unblock "App.exe"` |
-| Import rules from a file                 | `-i "Rules.fer"` | `--import "Rules.fer"` |
-| Export current rules to a file           | `-e "Rules.fer"` | `--export "Rules.fer"` |
-| Silent mode (exit after execution)       | `-s`             | `--silent`             |
+| 禁止该应用程序访问互联网资源 | `-b "App.exe"`   | `--block "App.exe"`   |
+| 解除对某应用程序的网络访问限制 | `-u "App.exe"` | `--unblock "App.exe"` |
+| 从文件中导入规则                 | `-i "Rules.fer"` | `--import "Rules.fer"` |
+| 将当前规则导出为文件           | `-e "Rules.fer"` | `--export "Rules.fer"` |
+| 静默模式（执行完成后退出）       | `-s`             | `--silent`             |
 
-Use the command line or scripts to block and unblock internet access for applications.
+可以使用命令行或脚本来锁定或解锁应用程序对互联网的访问权限。
 
-## Screenshot
+## 截图
 ![](https://github.com/user-attachments/assets/c5746b70-69a4-4f78-9319-e48ed713aad6)
 
-## Download
->Supports Windows 7, 8.1, 10, 11.
+## 下载
+>支持 Windows 7、8.1、10 和 11 操作系统。
 
-**[Download](https://github.com/r57zone/Firewall-Easy/releases)**
-## Feedback
+**[下载](https://github.com/r57zone/Firewall-Easy/releases)**
+## 反馈
 `r57zone[at]gmail.com`
